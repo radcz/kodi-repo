@@ -41,7 +41,6 @@ preferred_audio_quality = "stereo"
 sosac_domain = __set__("sosac_domain")
 streaming_provider = __set__("streaming_provider")
 domain_actif = __set__("domain_actif")
-print("domain_actif ",domain_actif)
 #STREAMUJ_API = "https://www.streamuj.tv/json_api_player.php?"
 #SOSAC_API = "https://kodi-api.sosac.to/"
 STREAMUJ_API = f"https://{streaming_provider}/json_api_player.php?"
@@ -232,9 +231,9 @@ def get_icon(icon) :
     return os.path.join(artPath,icon)
 
 def debug(text,level):
-    if level == 0 : xbmc.log(str([text]))
-    elif level == 1 : xbmc.log(str([text]), xbmc.LOGDEBUG)
-    elif level == 2 : xbmc.log(str([text]), xbmc.LOGERROR)
+    # Ladicí výpisy jen do ladicího logu. Dřív šly jako ERROR do kodi.log vždy,
+    # včetně URL s uživatelským jménem a otiskem hesla.
+    xbmc.log("Sosac: " + str(text), xbmc.LOGDEBUG)
 
 def notify(title, message, time=5000):
     try:
@@ -244,6 +243,14 @@ def notify(title, message, time=5000):
 
 def translate(text):
       return addon.getLocalizedString(text)
+
+def tr(text_id, *args):
+    # překlad s parametry; chybějící nebo vadný překlad nesmí shodit doplněk
+    text = addon.getLocalizedString(text_id)
+    try :
+        return text % args if args else text
+    except (TypeError, ValueError) :
+        return (text + " " + " ".join(str(a) for a in args)).strip()
 
 def isMatrix():
     try:
@@ -268,11 +275,11 @@ def isNexus():
 
 try :
     if not os.path.isdir(profilepath) : os.makedirs(profilepath)
-    down_folder = addon.getSetting("downloads")
-    moviesPath = xbmcvfs.translatePath(os.path.join(down_folder,"movies"))
-    seriesPath = xbmcvfs.translatePath(os.path.join(down_folder,"series"))
-    moviesSub= xbmcvfs.translatePath(os.path.join(down_folder,"moviessub"))
-    seriesSub = xbmcvfs.translatePath(os.path.join(down_folder,"seriessub"))
+    # výchozí úložiště = Offline v Kodi (funguje i na iPadu)
+    moviesPath = os.path.join(profilepath,"movies")
+    seriesPath = os.path.join(profilepath,"series")
+    moviesSub = os.path.join(profilepath,"moviessub")
+    seriesSub = os.path.join(profilepath,"seriessub")
     movie_data = xbmcvfs.translatePath(os.path.join(profilepath,"movie_data.json"))
     if not xbmcvfs.exists(movie_data) :
         f_data = {}
@@ -296,6 +303,63 @@ try :
     if not os.path.isdir(seriesSub) : os.mkdir(seriesSub)
 except Exception as e :
     debug("downfolder error %s"%e, 2)
+
+############################################
+# Úložiště stažených videí
+#   0 = Offline v Kodi (složka doplňku, funguje i na iPadu / Apple TV)
+#   1 = Složka v počítači (nastavení "downloads")
+ROOT_OFFLINE = 0
+ROOT_PC = 1
+OFFLINE_ROOT = profilepath
+
+def pc_root() :
+    path = __set__("downloads")
+    if not path :
+        return ""
+    path = xbmcvfs.translatePath(path)
+    # výchozí hodnota nastavení ukazuje do složky doplňku = to je offline úložiště
+    if os.path.normpath(path) == os.path.normpath(OFFLINE_ROOT) :
+        return ""
+    return path
+
+def root_base(idx) :
+    if int(idx) == ROOT_PC and pc_root() :
+        return pc_root()
+    return OFFLINE_ROOT
+
+def down_paths(idx) :
+    base = root_base(idx)
+    paths = {}
+    for name in ("movies", "series", "moviessub", "seriessub") :
+        paths[name] = os.path.join(base, name)
+        try :
+            if not os.path.isdir(paths[name]) : os.makedirs(paths[name])
+        except Exception as e :
+            debug("down_paths mkdir error %s"%e, 2)
+    return paths
+
+def available_roots() :
+    return [ROOT_OFFLINE, ROOT_PC] if pc_root() else [ROOT_OFFLINE]
+
+def choose_root() :
+    # Kam stahovat: podle nastavení "download-target" (0 = zeptat se, 1 = offline, 2 = počítač).
+    target = __set__("download-target") or "0"
+    if target == "1" :
+        return ROOT_OFFLINE
+    if target == "2" :
+        idx = ROOT_PC
+    else :
+        pc = pc_root()
+        options = [translate(30415), translate(30416) + (f" ({pc})" if pc else "")]
+        idx = dialog.select(translate(30417), options)
+        if idx < 0 :
+            return None
+    if idx == ROOT_PC and not pc_root() :
+        path = dialog.browse(3, translate(30418), "files")
+        if not path :
+            return None
+        addon.setSetting("downloads", path)
+    return idx
 
 xbmcpath = xbmcvfs.translatePath(os.path.join("special://xbmc","skin.estuary"))
 skinpath = xbmcvfs.translatePath("special://skin")
@@ -389,11 +453,9 @@ def set_streamujtv_info(stream):
     elif h  :
         stream_url = f"{STREAMUJ_API}action=check-user&password={h}&login={streamujtv_user}&passwordinmd5=1"
     else : exit()
-    print("check stream_url", stream_url)
     return stream_url
 
 def set_sosac_info(stream,**kwargs):
-    print("util kwargs ",kwargs)
     sosac_passwordhash = passhash()
     page = kwargs['arg3'] if 'arg3' in kwargs else "1"
     
@@ -567,14 +629,15 @@ def set_sosac_watchTime(type_id, stream_id, time_val) :
     return
 
 def get_title(dest) :
-    not_name = dest.split("/")[-1]
+    not_name = os.path.basename(dest)
     item_id = not_name.split("-")[0]
-    link = set_sosac_info("id",**{'arg2':item_id}) if "movies" in dest else set_sosac_ser("",**{'arg2':item_id,'arg3':"episodes",'arg4':""})
+    is_movie = os.path.basename(os.path.dirname(dest)) == "movies"
+    link = set_sosac_info("id",**{'arg2':item_id}) if is_movie else set_sosac_ser("",**{'arg2':item_id,'arg3':"episodes",'arg4':""})
     debug("downloadFil link %s"%link,2)
     source = requests.get(link).text
     data = json.loads(source)
     vid_title = data["n"]["cs"][0] if type(data["n"]["cs"]) == type([]) else data["n"]["cs"]
-    if "movies" not in dest :
+    if not is_movie :
         epi_nb = str(data["ep"]) if len(str(data["ep"])) > 1 else "0" + str(data["ep"])
         sai_nb = str(data["s"]) if len(str(data["s"])) > 1 else "0" + str(data["s"])                    
         vid_title = f'{vid_title} {sai_nb}x{epi_nb}'

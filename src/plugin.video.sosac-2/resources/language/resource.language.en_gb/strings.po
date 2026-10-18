@@ -1384,3 +1384,107 @@ msgstr "Surround"
 msgctxt "#30414"
 msgid "Add-on sources (Sosac, Prehraj.to, HBO, dobbelina) were added to the File manager. Restart Kodi to use them."
 msgstr ""
+
+msgctxt "#30415"
+msgid "Offline in Kodi (also for iPad)"
+msgstr ""
+
+msgctxt "#30416"
+msgid "To a folder on this computer"
+msgstr ""
+
+msgctxt "#30417"
+msgid "Where to download?"
+msgstr ""
+
+msgctxt "#30418"
+msgid "Choose a download folder"
+msgstr ""
+
+msgctxt "#30419"
+msgid "Done: downloaded %s of %s"
+msgstr ""
+
+msgctxt "#30420"
+msgid "Download everything on this page"
+msgstr ""
+
+msgctxt "#30421"
+msgid "Download selected…"
+msgstr ""
+
+msgctxt "#30422"
+msgid "Delete selected…"
+msgstr ""
+
+msgctxt "#30423"
+msgid "Delete everything in this folder"
+msgstr ""
+
+msgctxt "#30424"
+msgid "Delete whole folder"
+msgstr ""
+
+msgctxt "#30425"
+msgid "Really delete %s item(s)?"
+msgstr ""
+
+msgctxt "#30426"
+msgid "Deleted: %s"
+msgstr ""
+
+msgctxt "#30427"
+msgid "Choose videos to download"
+msgstr ""
+
+msgctxt "#30428"
+msgid "Choose items to delete"
+msgstr ""
+
+msgctxt "#30429"
+msgid "Downloaded – Offline in Kodi"
+msgstr ""
+
+msgctxt "#30430"
+msgid "Downloaded – folder on this computer"
+msgstr ""
+
+msgctxt "#30431"
+msgid "Queued for download: %s"
+msgstr ""
+
+msgctxt "#30432"
+msgid "Where to download"
+msgstr ""
+
+msgctxt "#30433"
+msgid "Always ask"
+msgstr ""
+
+msgctxt "#30434"
+msgid "Offline in Kodi (add-on folder)"
+msgstr ""
+
+msgctxt "#30435"
+msgid "Folder on this computer"
+msgstr ""
+
+msgctxt "#30436"
+msgid "Folder on this computer for downloads"
+msgstr ""
+
+msgctxt "#30437"
+msgid "Offline keeps videos inside Kodi, so they also work on iPad without a computer."
+msgstr ""
+
+msgctxt "#30438"
+msgid "Delete everything downloaded"
+msgstr ""
+
+msgctxt "#30439"
+msgid "Switch skin only inside Sosac"
+msgstr ""
+
+msgctxt "#30440"
+msgid "Off = the Sosac skin is used everywhere (no 'Keep skin?' question). On = original behaviour: the skin switches when entering and leaving Sosac and Kodi asks every time."
+msgstr ""

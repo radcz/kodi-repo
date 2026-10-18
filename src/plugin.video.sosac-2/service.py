@@ -208,21 +208,31 @@ if __name__ == '__main__':
 
     monitor = xbmc.Monitor()
 
+    def set_skin(skin_id) :
+        xbmc.executeJSONRPC(json.dumps({"jsonrpc":"2.0","id":1,"method":"Settings.SetSettingValue",
+            "params":{"setting":"lookandfeel.skin","value":skin_id}}))
+
+    # Výchozí: vzhled Sosacu (vychází z Estuary) jednou nastavit natrvalo. Každé přepnutí
+    # vzhledu totiž Kodi potvrzuje dotazem "Ponechat vzhled?", což při přechodu mezi
+    # doplňky vyskakovalo pořád dokola.
+    if addon.getSetting("auto-skin") != "true" :
+        if addon.getSetting("skin_fixed") != "true" and xbmc.getCondVisibility('System.AddonIsEnabled(%s)' % SKIN_ID) :
+            addon.setSetting("skin_fixed", "true")
+            if xbmc.getSkinDir() != SKIN_ID :
+                set_skin(SKIN_ID)
+
     while not monitor.abortRequested():
-        plugin_name = xbmc.getInfoLabel('Container.PluginName')
-        skindir = xbmc.getSkinDir()
-        # Skin přepínat jen když je opravdu povolený. Jinak Kodi spadne zpět na výchozí
-        # skin a smyčka by ho každou sekundu znovu načítala (problikávání).
-        if xbmc.getCondVisibility('System.AddonIsEnabled(%s)' % SKIN_ID) :
+        # původní chování (jen když ho uživatel zapne v nastavení)
+        if addon.getSetting("auto-skin") == "true" and xbmc.getCondVisibility('System.AddonIsEnabled(%s)' % SKIN_ID) :
+            plugin_name = xbmc.getInfoLabel('Container.PluginName')
+            skindir = xbmc.getSkinDir()
             if "sosac-2" in plugin_name and skindir != SKIN_ID:
                 addon.setSetting("skin", skindir)
-                xbmc.executeJSONRPC(json.dumps({"jsonrpc":"2.0","id":1,"method":"Settings.SetSettingValue",
-                    "params":{"setting":"lookandfeel.skin","value":SKIN_ID}}))
+                set_skin(SKIN_ID)
             elif plugin_name and "sosac-2" not in plugin_name and skindir == SKIN_ID:
                 last_skin = addon.getSetting("skin")
                 if last_skin and last_skin != SKIN_ID:
-                    xbmc.executeJSONRPC(json.dumps({"jsonrpc":"2.0","id":1,"method":"Settings.SetSettingValue",
-                        "params":{"setting":"lookandfeel.skin","value":last_skin}}))
+                    set_skin(last_skin)
 
         if monitor.waitForAbort(1):
             break

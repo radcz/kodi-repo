@@ -1384,3 +1384,107 @@ msgstr "Surround"
 msgctxt "#30414"
 msgid "Add-on sources (Sosac, Prehraj.to, HBO, dobbelina) were added to the File manager. Restart Kodi to use them."
 msgstr "Do Správcu súborov boli pridané zdroje doplnkov (Sosac, Prehraj.to, HBO, dobbelina). Prejavia sa po reštarte Kodi."
+
+msgctxt "#30415"
+msgid "Offline in Kodi (also for iPad)"
+msgstr "Offline v Kodi (aj pre iPad)"
+
+msgctxt "#30416"
+msgid "To a folder on this computer"
+msgstr "Do priečinka v počítači"
+
+msgctxt "#30417"
+msgid "Where to download?"
+msgstr "Kam stiahnuť?"
+
+msgctxt "#30418"
+msgid "Choose a download folder"
+msgstr "Vyberte priečinok na sťahovanie"
+
+msgctxt "#30419"
+msgid "Done: downloaded %s of %s"
+msgstr "Hotovo: stiahnuté %s z %s"
+
+msgctxt "#30420"
+msgid "Download everything on this page"
+msgstr "Stiahnuť všetko na tejto stránke"
+
+msgctxt "#30421"
+msgid "Download selected…"
+msgstr "Stiahnuť vybrané…"
+
+msgctxt "#30422"
+msgid "Delete selected…"
+msgstr "Zmazať vybrané…"
+
+msgctxt "#30423"
+msgid "Delete everything in this folder"
+msgstr "Zmazať všetko v tomto priečinku"
+
+msgctxt "#30424"
+msgid "Delete whole folder"
+msgstr "Zmazať celý priečinok"
+
+msgctxt "#30425"
+msgid "Really delete %s item(s)?"
+msgstr "Naozaj zmazať položiek: %s?"
+
+msgctxt "#30426"
+msgid "Deleted: %s"
+msgstr "Zmazané: %s"
+
+msgctxt "#30427"
+msgid "Choose videos to download"
+msgstr "Vyberte videá na stiahnutie"
+
+msgctxt "#30428"
+msgid "Choose items to delete"
+msgstr "Vyberte položky na zmazanie"
+
+msgctxt "#30429"
+msgid "Downloaded – Offline in Kodi"
+msgstr "Stiahnuté – Offline v Kodi"
+
+msgctxt "#30430"
+msgid "Downloaded – folder on this computer"
+msgstr "Stiahnuté – priečinok v počítači"
+
+msgctxt "#30431"
+msgid "Queued for download: %s"
+msgstr "Zaradené na stiahnutie: %s"
+
+msgctxt "#30432"
+msgid "Where to download"
+msgstr "Kam sťahovať"
+
+msgctxt "#30433"
+msgid "Always ask"
+msgstr "Vždy sa opýtať"
+
+msgctxt "#30434"
+msgid "Offline in Kodi (add-on folder)"
+msgstr "Offline v Kodi (priečinok doplnku)"
+
+msgctxt "#30435"
+msgid "Folder on this computer"
+msgstr "Priečinok v počítači"
+
+msgctxt "#30436"
+msgid "Folder on this computer for downloads"
+msgstr "Priečinok v počítači na sťahovanie"
+
+msgctxt "#30437"
+msgid "Offline keeps videos inside Kodi, so they also work on iPad without a computer."
+msgstr "Offline ukladá videá priamo do Kodi, takže fungujú aj na iPade bez počítača."
+
+msgctxt "#30438"
+msgid "Delete everything downloaded"
+msgstr "Zmazať všetko stiahnuté"
+
+msgctxt "#30439"
+msgid "Switch skin only inside Sosac"
+msgstr "Prepínať vzhľad len v Sosacu"
+
+msgctxt "#30440"
+msgid "Off = the Sosac skin is used everywhere (no 'Keep skin?' question). On = original behaviour: the skin switches when entering and leaving Sosac and Kodi asks every time."
+msgstr "Vypnuté = vzhľad Sosacu sa použije všade a Kodi sa nebude pýtať „Ponechať vzhľad?“. Zapnuté = pôvodné správanie: vzhľad sa prepína pri vstupe do Sosacu a odchode z neho a Kodi sa zakaždým pýta."

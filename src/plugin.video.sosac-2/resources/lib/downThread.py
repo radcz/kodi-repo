@@ -135,3 +135,44 @@ def downloadFil2(url, dest):
     debug("Main thread name: {}".format(threading.current_thread().name),2)
 
 
+def run_queue(items) :
+    """Stáhne položky postupně (jedno video po druhém) ve vlákně na pozadí.
+
+    items: seznam slovníků {"title", "dest", "resolve", "subs"}
+      resolve - URL videa, nebo funkce, která ho zjistí až těsně před stažením
+                (odkazy ze streamovací služby po čase vyprší)
+      subs    - volitelná funkce, která uloží titulky
+    """
+    def worker() :
+        total = len(items)
+        done = 0
+        monitor = xbmc.Monitor()
+        for n, it in enumerate(items, 1) :
+            if monitor.abortRequested() :
+                break
+            title = it.get("title") or os.path.basename(it["dest"])
+            try :
+                url = it["resolve"]() if callable(it["resolve"]) else it["resolve"]
+                if not url :
+                    raise Exception("no stream url")
+                notify(title, "%s (%s/%s)" % (translate(30076), n, total), time=3000)
+                lastPd[threading.current_thread().name] = 0
+                downloadTh(title, url, it["dest"])
+                if os.path.isfile(it["dest"]) and os.path.getsize(it["dest"]) > 0 :
+                    done += 1
+                    if it.get("subs") :
+                        try :
+                            it["subs"]()
+                        except Exception as e :
+                            debug("run_queue subs error %s"%e, 2)
+            except Exception as e :
+                debug("run_queue item error %s %s"%(title, e), 2)
+                notify(title, translate(30079), time=3000)
+        notify(translate(30402), tr(30419, done, total), time=8000)
+
+    if not items :
+        return None
+    notify(translate(30402), tr(30431, len(items)), time=4000)
+    th = threading.Thread(target=worker, name="sosac-queue")
+    th.start()
+    return th

@@ -5,7 +5,7 @@ Vlastní repozitář doplňků pro [Kodi](https://kodi.tv) (testováno na Kodi 2
 | Doplněk | Verze | Popis |
 |---|---|---|
 | `plugin.video.freevideo` | 1.1.0 | FreeVideo.cz: výpisy, kategorie, hledání, přehrávání |
-| `plugin.video.sosac-2` | 3.1.2.1 | Sosac.TV s opravami (viz níže) |
+| `plugin.video.sosac-2` | 3.1.2.2 | Sosac.TV s opravami a stahováním (viz níže) |
 | `repository.radek` | 1.0.1 | samotný repozitář, díky kterému se doplňky aktualizují |
 
 ## Instalace do Kodi
@@ -19,8 +19,12 @@ Vlastní repozitář doplňků pro [Kodi](https://kodi.tv) (testováno na Kodi 2
 ZIP repozitáře jde stáhnout i přímo:
 [repository.radek-1.0.1.zip](repository.radek/repository.radek-1.0.1.zip)
 
-## Sosac.TV 3.1.2.1: co je opraveno oproti 3.1.2
+## Sosac.TV 3.1.2.2: co je nového a opraveno oproti 3.1.2
 
+- **Stahování:** volba *Offline v Kodi* (funguje i na iPadu) nebo *složka v počítači*; tlačítka *Stáhnout vše na této stránce* a *Stáhnout vybrané…* u filmů i dílů; stahování ve frontě po jednom.
+- **Mazání stažených:** *Smazat vybrané…*, *Smazat vše v této složce*, *Smazat celou složku* (kontextové menu) a *Smazat všechno stažené*.
+- Vzhled Sosacu se nastaví jednou natrvalo, takže při přepínání mezi doplňky už nevyskakuje „Ponechat vzhled?“ (původní přepínání lze zapnout v nastavení).
+- Ladicí výpisy už se nezapisují do běžného logu Kodi (dřív v něm bylo uživatelské jméno a otisk hesla).
 - Odstraněno problikávání: služba se každou sekundu pokoušela přepnout na skin, který Kodi ještě nezaregistroval.
 - Opraveno zvýraznění vybrané položky v menu (skin `skin.estuary-sosac` 3.0.1).
 - Doplněk už nemaže všechny uložené pozice přehrávání v Kodi (i u jiných doplňků) a nepřepisuje `advancedsettings.xml`.

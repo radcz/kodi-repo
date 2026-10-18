@@ -27,7 +27,7 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.1" provider-name="zak">
+<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.2" provider-name="zak">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
 		<import addon="script.module.six" version="1.11.0"/>
@@ -53,6 +53,12 @@
 			<fanart>fanart.png</fanart>
         </assets>
         <news>
+3.1.2.2
+- Stahování: volba Offline v Kodi (i pro iPad) nebo složka v počítači
+- Stáhnout vše na stránce / Stáhnout vybrané (filmy i díly)
+- Mazání stažených: vybrané, vše ve složce, celá složka, všechno stažené
+- Stahování ve frontě po jednom (dřív všechno naráz)
+- Další opravy chyb (přehrávání, titulky, stahování seriálů)
 3.1.2.1 (opravy)
 - Opraveno problikávání (opakované načítání skinu každou sekundu)
 - Opraveno zvýraznění vybrané položky v menu (skin 3.0.1)

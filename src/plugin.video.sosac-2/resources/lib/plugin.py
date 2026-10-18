@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import routing
-import requests, re, json, sys, os, time, threading
+import requests, re, json, sys, os, time, threading, shutil
 import urllib.parse
 from datetime import datetime as dt
 from datetime import timedelta
@@ -130,6 +130,136 @@ last_command2 = ""
 def get_url(url):
     r = requests.get(url, headers=hdrs).text
     return r
+
+################################################################################
+# Stažená videa: úložiště (Offline v Kodi / složka v počítači), mazání, dávky
+CUR_ROOT = ROOT_OFFLINE
+DOWN_VIEW = os.path.join(profilepath, "down_view.json")   # položky naposledy zobrazené složky
+PAGE_CACHE = os.path.join(profilepath, "page_cache.json")  # videa naposledy zobrazené stránky
+
+def use_root(idx) :
+    global moviesPath, seriesPath, moviesSub, seriesSub, CUR_ROOT
+    try :
+        CUR_ROOT = int(idx)
+    except (TypeError, ValueError) :
+        CUR_ROOT = ROOT_OFFLINE
+    if CUR_ROOT not in available_roots() :
+        CUR_ROOT = ROOT_OFFLINE
+    paths = down_paths(CUR_ROOT)
+    moviesPath, seriesPath = paths["movies"], paths["series"]
+    moviesSub, seriesSub = paths["moviessub"], paths["seriessub"]
+    util.moviesPath, util.seriesPath, util.moviesSub, util.seriesSub = moviesPath, seriesPath, moviesSub, seriesSub
+    return CUR_ROOT
+
+def root_arg() :
+    try :
+        return plugin.args.get("root", [str(ROOT_OFFLINE)])[0]
+    except Exception :
+        return ROOT_OFFLINE
+
+def ask_root() :
+    idx = choose_root()
+    if idx is None :
+        return None
+    return use_root(idx)
+
+def save_json(path, data) :
+    try :
+        with open(path, "w", encoding="utf-8") as f :
+            json.dump(data, f)
+    except Exception as e :
+        debug("save_json error %s %s"%(path, e), 2)
+
+def cache_put(path, key, value, keep=30) :
+    data = load_json(path, {})
+    if not isinstance(data, dict) : data = {}
+    data.pop(key, None)
+    data[key] = value
+    while len(data) > keep :
+        data.pop(next(iter(data)))
+    save_json(path, data)
+
+def cache_get(path, key) :
+    data = load_json(path, {})
+    return data.get(key) if isinstance(data, dict) else None
+
+def page_key() :
+    import hashlib
+    return hashlib.md5((sys.argv[0] + (sys.argv[2] if len(sys.argv) > 2 else "")).encode("utf-8")).hexdigest()[:12]
+
+def load_json(path, default) :
+    try :
+        with open(path, "r", encoding="utf-8") as f :
+            return json.load(f)
+    except Exception :
+        return default
+
+def inside_root(path) :
+    base = os.path.realpath(root_base(CUR_ROOT))
+    real = os.path.realpath(path)
+    protected = {os.path.realpath(x) for x in (base, moviesPath, seriesPath, moviesSub, seriesSub)}
+    return real.startswith(base + os.sep) and real not in protected
+
+def sub_dir_for(path) :
+    real = os.path.realpath(path)
+    return moviesSub if real.startswith(os.path.realpath(moviesPath) + os.sep) else seriesSub
+
+def delete_video(path) :
+    if not inside_root(path) or not os.path.isfile(path) :
+        return 0
+    os.remove(path)
+    base = os.path.splitext(os.path.basename(path))[0]
+    for sub in (os.path.join(sub_dir_for(path), base + ".srt"), os.path.splitext(path)[0] + ".srt") :
+        try :
+            if os.path.isfile(sub) : os.remove(sub)
+        except OSError :
+            pass
+    return 1
+
+def delete_path(path) :
+    # soubor = jedno video, složka = celý seriál / série včetně titulků
+    if not inside_root(path) :
+        debug("delete_path mimo úložiště %s"%path, 2)
+        return 0
+    if os.path.isfile(path) :
+        return delete_video(path)
+    count = 0
+    for dirpath, dirs, files in os.walk(path) :
+        for name in files :
+            if name.endswith(".mp4") :
+                count += delete_video(os.path.join(dirpath, name))
+    shutil.rmtree(path, ignore_errors=True)
+    return count
+
+def pick_link(urls, key1, key2) :
+    # stejný jazyk a kvalita jako u prvního videa, jinak nejbližší dostupná
+    if key1 in urls and urls[key1].get(key2) :
+        return key1, key2
+    langs = [key1] + [x for x in urls if x != key1]
+    for lk in langs :
+        if lk not in urls : continue
+        for q in qual_list[qual_list.index(key2):] + qual_list if key2 in qual_list else qual_list :
+            if urls[lk].get(q) :
+                return lk, q
+    return None, None
+
+def make_resolver(link_id, key1, key2, sub_dest=None, with_subs=False) :
+    # Odkaz na stream se zjistí až těsně před stažením (odkazy po čase vyprší).
+    state = {}
+    def resolve() :
+        data = json.loads(get_url(set_streamujtv_info(link_id)))
+        urls = data.get("URL") or {}
+        k1, k2 = pick_link(urls, key1, key2)
+        if not k1 :
+            return None
+        state["urls"], state["k1"] = urls, k1
+        return get_url(urls[k1][k2])
+    def subtitles() :
+        urls, k1 = state.get("urls", {}), state.get("k1")
+        if with_subs and sub_dest and k1 and "subtitles" in urls.get(k1, {}) :
+            sub_dict = urls[k1]["subtitles"]
+            subs.save_sub(sub_dict[list(sub_dict.keys())[0]], sub_dest)
+    return resolve, subtitles
 
 def get_links_mess(data) :
     if data['errormessage'] != 0 and addon.getSetting('get_links') == "true" :
@@ -372,7 +502,7 @@ def set_common_properties(item, li, letype = ""):
                     langue = langue + (i.split("+")[0]).upper() + " + " + (i.split("+")[1][:2]).upper() + " titulky, "
                     lang_list.remove(i)
                     if len(lang_list) == 0 : break
-        langue = langue[:-2 ]if langue[-2] == "," else langue
+        langue = langue[:-2] if langue.endswith(", ") else langue
         langue = f"[B]{langue}[/B]"
     except Exception as e :
         langue = ""
@@ -381,6 +511,144 @@ def set_common_properties(item, li, letype = ""):
     li.setProperty('langue',langue)
 
     
+def add_download_buttons(page_items) :
+    # "Stáhnout vše na této stránce" a "Stáhnout vybrané…" nahoře ve výpisu filmů
+    if not page_items :
+        return
+    key = page_key()
+    cache_put(PAGE_CACHE, key, page_items)
+    for label, mode in ((translate(30420), "all"), (translate(30421), "select")) :
+        li = ListItem("[COLOR deepskyblue]%s[/COLOR]" % label)
+        li.setArt({'icon': get_icon("download.png")})
+        addDirectoryItem(plugin.handle, plugin.url_for(downmulti, mode=mode, key=key), li, False)
+
+def add_episode_buttons(items, season, episodes, season_nb) :
+    try :
+        info = items["info"]
+        ser_title = info["n"]["cs"][0] if isinstance(info["n"]["cs"], list) else info["n"]["cs"]
+        ser_title = ser_title.replace("/", "-")
+        ids = [str(x["_id"]) for x in episodes]
+        titles = [f'{str(season_nb).zfill(2)}x{str(n).zfill(2)} - {x["n"]["cs"] if not isinstance(x["n"]["cs"], list) else x["n"]["cs"][0]}'
+                  for n, x in enumerate(episodes, 1)]
+        key = page_key()
+        cache_put(PAGE_CACHE, key, [{"type": "episodes", "serial": str(info["_id"]), "folder": f"{ser_title} - Season {season_nb}",
+                                     "id": i, "title": t} for i, t in zip(ids, titles)])
+        for label, mode in ((translate(30420), "all"), (translate(30421), "select")) :
+            li = ListItem("[COLOR deepskyblue]%s[/COLOR]" % label)
+            li.setArt({'icon': get_icon("download.png")})
+            addDirectoryItem(plugin.handle, plugin.url_for(downmulti, mode=mode, key=key), li, False)
+    except Exception as e :
+        debug("add_episode_buttons error %s"%e, 2)
+
+@plugin.route('/downmulti')
+def downmulti():
+    # hromadné stažení položek naposledy zobrazené stránky (filmy nebo díly)
+    page = cache_get(PAGE_CACHE, plugin.args.get("key", [""])[0]) or []
+    if not page :
+        return
+    if plugin.args.get("mode", ["all"])[0] == "select" :
+        sel = dialog.multiselect(translate(30427), [x["title"] for x in page])
+        if not sel :
+            return
+        page = [page[i] for i in sel]
+
+    if page[0]["type"] == "episodes" :
+        # díly seriálu stahuje osvědčená funkce downsais (jedna složka pro sérii)
+        ids = "[" + ",".join(x["id"] for x in page) + "]"
+        xbmc.executebuiltin("RunPlugin(%s)" % plugin.url_for(downsais, page[0]["serial"], page[0]["folder"], ids))
+        return
+
+    select_key = selectQual("movies", page[0]["id"], page[0]["link"])
+    if select_key is None :
+        return
+    key1, key2, key3 = select_key
+    if ask_root() is None :
+        return
+    queue = []
+    for x in page :
+        file_id = f'{x["id"]}-{int(time.time())}{len(queue)}'
+        resolve, subtitles = make_resolver(x["link"], key1, key2, os.path.join(moviesSub, file_id + ".srt"), "sub" in key3)
+        queue.append({"title": x["title"], "dest": os.path.join(moviesPath, file_id + ".mp4"),
+                      "resolve": resolve, "subs": subtitles})
+        try :
+            save_key(movie_data, str(x["id"]), key1, key2, key3)
+        except Exception as e :
+            debug("downmulti save_key error %s"%e, 2)
+    run_queue(queue)
+
+@plugin.route('/downroots/<mov_ser>')
+def downroots(mov_ser):
+    # výběr: Stažené offline v Kodi / ve složce v počítači
+    dir_n = "m" if mov_ser == "movies" else "s"
+    for idx, label in ((ROOT_OFFLINE, translate(30429)), (ROOT_PC, translate(30430) + " (%s)" % pc_root())) :
+        li = ListItem(label)
+        li.setArt({'icon': get_icon("download.png")})
+        addDirectoryItem(plugin.handle, plugin.url_for(downloaded, mov_ser=mov_ser, dir_n=dir_n, root=idx), li, True)
+    li = ListItem("[COLOR red]%s[/COLOR]" % translate(30438))
+    li.setArt({'icon': 'DefaultIconError.png'})
+    addDirectoryItem(plugin.handle, plugin.url_for(downmanage, root=ROOT_OFFLINE, path="*", mode="everything"), li, False)
+    endOfDirectory(plugin.handle)
+
+@plugin.route('/downmanage')
+def downmanage():
+    use_root(root_arg())
+    mode = plugin.args.get("mode", ["select"])[0]
+    path = plugin.args.get("path", [""])[0]
+    if mode == "everything" :
+        # všechno stažené ve všech úložištích
+        targets = []
+        for r in available_roots() :
+            use_root(r)
+            for top in (moviesPath, seriesPath) :
+                targets += [(os.path.join(top, n), n) for n in sorted(os.listdir(top))] if os.path.isdir(top) else []
+    elif mode == "all" :
+        targets = cache_get(DOWN_VIEW, os.path.realpath(path)) or []
+        if not targets and os.path.isdir(path) :
+            targets = [(os.path.join(path, n), n) for n in sorted(os.listdir(path))]
+    else :
+        view = cache_get(DOWN_VIEW, os.path.realpath(path)) or []
+        if not view and os.path.isdir(path) :
+            view = [(os.path.join(path, n), n) for n in sorted(os.listdir(path)) if n.endswith(".mp4") or os.path.isdir(os.path.join(path, n))]
+        if not view :
+            return
+        sel = dialog.multiselect(translate(30428), [l for p, l in view])
+        if not sel :
+            return
+        targets = [view[i] for i in sel]
+    targets = [t for t in targets if os.path.exists(t[0])]
+    if not targets :
+        return
+    if not dialog.yesno(translate(30402), tr(30425, len(targets))) :
+        return
+    deleted = 0
+    for p, l in targets :
+        p = str(p)
+        if mode == "everything" :
+            # cesta může patřit do kteréhokoli úložiště
+            for r in available_roots() :
+                use_root(r)
+                if inside_root(p) : break
+        try :
+            if inside_root(p) :
+                delete_path(p)
+                deleted += 1
+        except Exception as e :
+            debug("downmanage delete error %s %s"%(p, e), 2)
+    notify(translate(30402), tr(30426, deleted), time=4000)
+    xbmc.executebuiltin('Container.Refresh')
+
+@plugin.route('/downdelete')
+def downdelete():
+    use_root(root_arg())
+    path = plugin.args.get("path", [""])[0]
+    if not path or not os.path.exists(path) or not inside_root(path) :
+        return
+    if not dialog.yesno(translate(30402), tr(30425, 1) + "\n" + os.path.basename(path)) :
+        return
+    n = delete_path(path)
+    notify(translate(30402), tr(30426, n), time=4000)
+    xbmc.executebuiltin('Container.Refresh')
+
 def show_plug_list(letype, epi_id, items, start=None, stat=None):
     global SOSAC_IMAGE
     if  not start  : start = stat = None
@@ -389,6 +657,14 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
         xbmcplugin.setContent(int(sys.argv[1]), 'movies')
         SOSAC_IMAGE = SOSAC_MOVIES
         queueMov = checkMyPlaylist("movies")
+        page_items = []
+        for it in items :
+            try :
+                t = it["n"]["cs"] if epi_id != "ENGLISH" else it["n"]["en"]
+                page_items.append({"type": "movies", "id": it["_id"], "link": it["l"], "title": t[0] if isinstance(t, list) else t})
+            except Exception :
+                pass
+        add_download_buttons(page_items)
         for i, item in enumerate(items):
             try : 
                 title = item["n"]["cs"] if epi_id != "ENGLISH" else item["n"]["en"]
@@ -502,6 +778,7 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
             for i, item in enumerate(episodes) :
                 x  = items[saison[0]][item]
                 playList.append(x["_id"])                   
+            add_episode_buttons(items, saison[0], [items[saison[0]][e] for e in episodes], 1)
             for i, item in enumerate(episodes) :
                 try :
                     x  = items[saison[0]][item]
@@ -567,6 +844,7 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
                 #x  = items[saison[int(epi_id)]][item] # avant 07/10 int(epi_id)-1
                 x  = items[str(epi_id)][item]
                 playList.append(x["_id"])                   
+            add_episode_buttons(items, str(epi_id), [items[str(epi_id)][e] for e in episodes], int(epi_id))
 
             for i, item in enumerate(episodes):
                 try :
@@ -704,7 +982,7 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
                                         langue = langue + (item_i.split("+")[0]).upper() + " + " + (item_i.split("+")[1][:2]).upper() + " titulky, "
                                         lang_list.remove(item_i)
                                         if len(lang_list) == 0 : break
-                            langue = langue[:-2 ]if langue[-2] == "," else langue
+                            langue = langue[:-2] if langue.endswith(", ") else langue
                             langue = f"[B]{langue}[/B]"
                         except Exception as e :
                             langue = ""
@@ -984,6 +1262,12 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
     elif letype == "download" :
         SOSAC_IMAGE = SOSAC_SERIES
         xbmcplugin.setContent(int(sys.argv[1]), 'movies')
+        view_items = []
+        cur_dir = start if start else moviesPath
+        for label, mode in ((translate(30422), "select"), (translate(30423), "all")) :
+            li = ListItem("[COLOR red]%s[/COLOR]" % label)
+            li.setArt({'icon': 'DefaultIconError.png'})
+            addDirectoryItem(plugin.handle, plugin.url_for(downmanage, root=CUR_ROOT, path=cur_dir, mode=mode), li, False)
         if epi_id == "serials" :
             debug("show_plug_list download dir start %s"%start, 2) 
             dir_list , fil_list = xbmcvfs.listdir(start)
@@ -1006,12 +1290,14 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
                 set_common_properties(item, li, letype = "download")
                 if ("Season" not in x) and ("1saison" not in x) :
                     debug("show_plug_list download tvshows x %s"%x, 2) 
-                    url = plugin.url_for(downloaded,"tvshows",x)
-                    addDirectoryItem(plugin.handle, url, li, True)
+                    url = plugin.url_for(downloaded,mov_ser="tvshows",dir_n=x,root=CUR_ROOT)
                 else :                    
                     debug("show_plug_list download serials x %s"%x, 2) 
-                    url = plugin.url_for(downloaded,"serials",x)
-                    addDirectoryItem(plugin.handle, url, li, True)
+                    url = plugin.url_for(downloaded,mov_ser="serials",dir_n=x,root=CUR_ROOT)
+                folder_path = os.path.join(start, x)
+                view_items.append([folder_path, li.getLabel() + " /"])
+                li.addContextMenuItems([(translate(30424), "RunPlugin(%s)" % plugin.url_for(downdelete, root=CUR_ROOT, path=folder_path))])
+                addDirectoryItem(plugin.handle, url, li, True)
 
             for i, x in enumerate(items):
                 item = items[x]
@@ -1040,14 +1326,17 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
                         debug("set_common_properties download watched error %s"%e, 2)
 
                     menu_list = []
-                    action = "container.update(\"%s\")" % plugin.url_for(downloaddel,query="serials",query1=str(item["_id"]),query2=str(item["name2"]))
+                    action = "container.update(\"%s\")" % plugin.url_for(downloaddel,query="serials",query1=str(item["_id"]),query2=str(item["name2"]),root=CUR_ROOT)
                     menu_list.append((translate(30293), action))
                     li.addContextMenuItems(menu_list)
-                    url = plugin.url_for(downloadPlay, query="serials", query1=str(item["_id"]), query2=str(item["name2"]))
+                    name2 = str(item["name2"]).split("+")
+                    view_items.append([f"{name2[0]}/{item['_id']}-{name2[-1]}.mp4", title])
+                    url = plugin.url_for(downloadPlay, query="serials", query1=str(item["_id"]), query2=str(item["name2"]), root=CUR_ROOT)
                     addDirectoryItem(plugin.handle, url, li, False)
                 except Exception as e :
                     debug("show_plug_list donwload error %s"%e, 2)
                     
+            cache_put(DOWN_VIEW, os.path.realpath(cur_dir), view_items)
             xbmc.executebuiltin("Container.SetViewMode(%s)" % "506")
             endOfDirectory(plugin.handle)
 
@@ -1065,13 +1354,13 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
                     set_common_properties(item, li, letype = "download")
                 except Exception as e :
                     debug("show_plug_list download dir listerror %s"%e, 2)
-                start_pre = start.split("\\")[-1]
-                if "Season" not in x :                   
-                    url = plugin.url_for(downloaded,"serials",start_pre+"+"+x)
-                    addDirectoryItem(plugin.handle, url, li, True)
-                else :                    
-                    url = plugin.url_for(downloaded,"serials",start_pre+"+"+x)
-                    addDirectoryItem(plugin.handle, url, li, True)                                
+                start_pre = os.path.basename(os.path.normpath(start))  # dřív split("\\") = jen Windows
+                url = plugin.url_for(downloaded,mov_ser="serials",dir_n=start_pre+"+"+x,root=CUR_ROOT)
+                folder_path = os.path.join(start, x)
+                view_items.append([folder_path, li.getLabel() + " /"])
+                li.addContextMenuItems([(translate(30424), "RunPlugin(%s)" % plugin.url_for(downdelete, root=CUR_ROOT, path=folder_path))])
+                addDirectoryItem(plugin.handle, url, li, True)
+            cache_put(DOWN_VIEW, os.path.realpath(cur_dir), view_items)
             xbmc.executebuiltin("Container.SetViewMode(%s)" % "506")
             endOfDirectory(plugin.handle)
             #xbmc.executebuiltin("Container.Refresh")
@@ -1105,14 +1394,17 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
                         debug("set_common_properties download watched error %s"%e, 2)
 
                     menu_list = []
-                    action = "container.update(\"%s\")" % plugin.url_for(downloaddel,query="movies",query1=str(item["_id"]),query2=str(item["name2"]))
+                    action = "container.update(\"%s\")" % plugin.url_for(downloaddel,query="movies",query1=str(item["_id"]),query2=str(item["name2"]),root=CUR_ROOT)
                     menu_list.append((translate(30293), action))
                     li.addContextMenuItems(menu_list)
-                    url = plugin.url_for(downloadPlay, query="movies", query1=str(item["_id"]), query2=str(item["name2"]))
+                    name2 = str(item["name2"]).split("+")
+                    view_items.append([f"{name2[0]}/{item['_id']}-{name2[-1]}.mp4", title])
+                    url = plugin.url_for(downloadPlay, query="movies", query1=str(item["_id"]), query2=str(item["name2"]), root=CUR_ROOT)
                     addDirectoryItem(plugin.handle, url, li, False)
                 except Exception as e :
                     debug("show_plug_list donwload error %s"%e, 2)
 
+            cache_put(DOWN_VIEW, os.path.realpath(cur_dir), view_items)
             xbmc.executebuiltin("Container.SetViewMode(%s)" % "507")
             endOfDirectory(plugin.handle)
 
@@ -1299,7 +1591,7 @@ def movies():
     listItem = ListItem(translate(30006))
     listItem.setProperty("infomenu",translate(30106))
     listItem.setArt({'icon': get_icon("download.png")})
-    items.append((plugin.url_for(downloaded,"movies","m"), listItem, True))
+    items.append((plugin.url_for(downroots,"movies") if pc_root() else plugin.url_for(downloaded,mov_ser="movies",dir_n="m",root=ROOT_OFFLINE), listItem, True))
     listItem = ListItem(translate(30007))
     listItem.setProperty("infomenu",translate(30107))
     listItem.setArt({'icon': get_icon("playlist.png")})
@@ -1394,7 +1686,7 @@ def tvshows():
     listItem = ListItem(translate(30006))
     listItem.setProperty("infomenu",translate(30106))
     listItem.setArt({'icon': get_icon("download.png")})
-    items.append((plugin.url_for(downloaded,"serials","s"), listItem, True))
+    items.append((plugin.url_for(downroots,"serials") if pc_root() else plugin.url_for(downloaded,mov_ser="serials",dir_n="s",root=ROOT_OFFLINE), listItem, True))
     listItem = ListItem(translate(30022))
     listItem.setProperty("infomenu",translate(30122))
     listItem.setArt({'icon': get_icon("playlist.png")})
@@ -1962,6 +2254,7 @@ def settings():
 
 @plugin.route('/downloaddel')
 def downloaddel():
+    use_root(root_arg())
     mov_ser = plugin.args["query"][0]
     m_id = plugin.args["query1"][0]
     #name2 = plugin.args["query2"][0]
@@ -1992,7 +2285,7 @@ def downloaddel():
 
 @plugin.route('/downloaded/<mov_ser>/<dir_n>')
 def downloaded(mov_ser,dir_n):
-    #thread_act = threading.enumerate()
+    use_root(root_arg())
     file_dict = {}
     def sortSecond(val):
         return val[1]
@@ -2040,6 +2333,7 @@ def downloaded(mov_ser,dir_n):
         
 @plugin.route('/downloadPlay')
 def downloadPlay():
+    use_root(root_arg())
     mov_ser = plugin.args["query"][0]
     m_id = plugin.args["query1"][0]
     name2 = plugin.args["query2"][0].split("+")
@@ -2055,7 +2349,9 @@ def downloadPlay():
     try :
         if xbmcvfs.exists(filename) :
             li = ListItem(path=filename)
-            if sub_fil in fil_list :
+            if os.path.isfile(os.path.splitext(filename)[0] + ".srt") :
+                li.setSubtitles([os.path.splitext(filename)[0] + ".srt"])
+            elif sub_fil in fil_list :
                 sub_path = f"{subpath}/{sub_fil}"
                 try:
                     li.setSubtitles([sub_path])
@@ -2277,6 +2573,8 @@ def download(mov_ser,m_id,link_id):
 
 @plugin.route('/downsais/<sais_id>/<title>/<sdsais_list>')
 def downsais(sais_id,title,sdsais_list):
+    if plugin.args.get("root") : use_root(root_arg())
+    elif ask_root() is None : return
     if type(sdsais_list) != type([]) :
         dsais_list = re.findall(r"(\d+)[,|\]]",sdsais_list.replace("'",""))
     else  : dsais_list = sdsais_list
@@ -2343,6 +2641,7 @@ def downsais(sais_id,title,sdsais_list):
 
 @plugin.route('/downserial/<sais_id>')
 def downserial(sais_id):
+    if ask_root() is None : return
     sais_list = []
     url = set_sosac_epi(sais_id)
     source = get_url(url)
@@ -2434,6 +2733,7 @@ def downserial(sais_id):
 
 @plugin.route('/downserialcom/<sais_id>')
 def downserialcom(sais_id):
+    if ask_root() is None : return
     sais_list = []
     url = set_sosac_epi(sais_id)
     source = get_url(url)
@@ -2918,6 +3218,7 @@ def downloadPlug(mov_ser,m_id,link_id):
         except : return
         if answ >=0 :
             key1 , key2 , key3 = suivi_list[answ]
+            if ask_root() is None : return
             fich_data = movie_data if mov_ser == "movies" else serial_data
             save_key(fich_data,str(m_id),key1,key2,key3)
 
@@ -3362,20 +3663,12 @@ def upd_download(del_day) :
     if len(sais_list) != 0 : downloadSais(sais_list)
 
 def downloadSais(vid_list):
-    thread_act = threading.enumerate()
-    debug("Main thread name: {}".format(threading.current_thread().name),2)
-    initial = threading.active_count()
-    for item in vid_list :
-        debug("downloadSais item[1] %s"%(item[1]), 2)
-        downloadFil2(item[0], item[1])
-        start_ti = time.time()        
-        while time.time() - start_ti < 5.0 :
-                a = 1
-        #debug("nombre de download %s"%(threading.active_count() - initial), 2)
-
-    thread_act = threading.enumerate()
-    debug("downloadSais threading.enumerate %s"%thread_act, 2)
-    endOfDirectory(plugin.handle)
+    # dřív se spustila všechna stahování naráz a mezi nimi běžela 5s smyčka naprázdno
+    items = [{"resolve": url, "dest": dest, "title": os.path.basename(os.path.dirname(dest)) + " " + os.path.basename(dest).split("-")[0]}
+             for url, dest in vid_list]
+    run_queue(items)
+    if plugin.handle >= 0 :
+        endOfDirectory(plugin.handle)
 
 def run():
     plugin.run()
