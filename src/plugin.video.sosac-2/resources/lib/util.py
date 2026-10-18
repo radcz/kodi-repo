@@ -324,7 +324,9 @@ def pc_root() :
 
 def root_base(idx) :
     if int(idx) == ROOT_PC and pc_root() :
-        return pc_root()
+        # do podsložky "Sosac", ať vybraná složka (třeba Plocha) není zaplněná movies/series/…
+        pc = pc_root()
+        return pc if os.path.basename(os.path.normpath(pc)) == "Sosac" else os.path.join(pc, "Sosac")
     return OFFLINE_ROOT
 
 def down_paths(idx) :

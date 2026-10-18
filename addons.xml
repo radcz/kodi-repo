@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addons>
-<addon id="plugin.video.freevideo" name="FreeVideo.cz" version="1.1.0" provider-name="Radek">
+<addon id="plugin.video.freevideo" name="Video FREE" version="1.2.0" provider-name="Radek">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
         <import addon="script.module.requests" version="2.22.0"/>
@@ -9,16 +9,17 @@
         <provides>video</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="cs_CZ">Videa z webu freevideo.cz</summary>
-        <summary lang="en_GB">Videos from freevideo.cz</summary>
-        <description lang="cs_CZ">Neoficiální doplněk pro přehrávání videí z freevideo.cz: nejnovější, nejnavštěvovanější, kategorie, sekce, hledání a stahování videí. Obsah pouze pro dospělé (18+).</description>
-        <description lang="en_GB">Unofficial add-on for freevideo.cz: newest, most viewed, categories, sections and search. Adults only (18+).</description>
+        <summary lang="cs_CZ">Video FREE - videa z freevideo.cz</summary>
+        <summary lang="en_GB">Video FREE - videos from freevideo.cz</summary>
+        <description lang="cs_CZ">Video FREE - neoficiální doplněk pro přehrávání videí z freevideo.cz: nejnovější, nejnavštěvovanější, kategorie, sekce, hledání a stahování videí. Obsah pouze pro dospělé (18+).</description>
+        <description lang="en_GB">Video FREE - unofficial add-on for freevideo.cz: newest, most viewed, categories, sections and search. Adults only (18+).</description>
         <disclaimer lang="cs_CZ">Doplněk neobsahuje ani nehostuje žádný obsah, pouze zobrazuje veřejně dostupné stránky freevideo.cz. Obsah 18+.</disclaimer>
         <language>cs</language>
         <platform>all</platform>
         <license>GPL-3.0-or-later</license>
         <source>https://freevideo.cz</source>
-        <news>1.1.0 - stahování videí (i více najednou), fronta stahování
+        <news>1.2.0 - doplněk přejmenován na Video FREE
+1.1.0 - stahování videí (i více najednou), fronta stahování
 1.0.0 - první verze</news>
         <assets>
             <icon>icon.png</icon>
@@ -27,7 +28,7 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.2" provider-name="zak">
+<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.3" provider-name="zak">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
 		<import addon="script.module.six" version="1.11.0"/>
@@ -53,6 +54,11 @@
 			<fanart>fanart.png</fanart>
         </assets>
         <news>
+3.1.2.3
+- Průběh stahování: lišta s procenty, MB a rychlostí v rohu Kodi
+- Ve Stažených: probíhající a čekající stahování s procenty, Zrušit stahování
+- Stahování do počítače do podsložky Sosac
+- Opravena chyba "Error getting" při mazání videa
 3.1.2.2
 - Stahování: volba Offline v Kodi (i pro iPad) nebo složka v počítači
 - Stáhnout vše na stránce / Stáhnout vybrané (filmy i díly)
@@ -79,10 +85,10 @@
         </dir>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="cs_CZ">Vlastní repozitář doplňků (FreeVideo.cz, Sosac.TV s opravami)</summary>
+        <summary lang="cs_CZ">Vlastní repozitář doplňků (Video FREE, Sosac.TV s opravami)</summary>
         <summary lang="en_GB">Personal add-on repository</summary>
-        <description lang="cs_CZ">Repozitář s doplňky FreeVideo.cz a Sosac.TV (opravená verze) a jejich aktualizacemi.</description>
-        <description lang="en_GB">Repository with the FreeVideo.cz and patched Sosac.TV add-ons and their updates.</description>
+        <description lang="cs_CZ">Repozitář s doplňky Video FREE a Sosac.TV (opravená verze) a jejich aktualizacemi.</description>
+        <description lang="en_GB">Repository with the Video FREE and patched Sosac.TV add-ons and their updates.</description>
         <platform>all</platform>
         <assets>
             <icon>icon.png</icon>

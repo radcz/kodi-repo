@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""FreeVideo.cz - doplněk pro Kodi 21."""
+"""Video FREE - doplněk pro Kodi 21 (zdroj: freevideo.cz)."""
 import json
 import os
 import sys

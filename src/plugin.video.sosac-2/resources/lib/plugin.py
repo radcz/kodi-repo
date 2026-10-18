@@ -221,6 +221,7 @@ def delete_path(path) :
     if not inside_root(path) :
         debug("delete_path mimo úložiště %s"%path, 2)
         return 0
+    cancel_under(path)
     if os.path.isfile(path) :
         return delete_video(path)
     count = 0
@@ -230,6 +231,34 @@ def delete_path(path) :
                 count += delete_video(os.path.join(dirpath, name))
     shutil.rmtree(path, ignore_errors=True)
     return count
+
+def progress_label(entry) :
+    pct = entry.get("percent", 0)
+    if pct is None or pct < 0 :
+        return "[COLOR grey]%s[/COLOR]" % translate(30442)
+    if entry.get("stale") :
+        return "[COLOR orange]%s %d %%[/COLOR]" % (translate(30443), pct)
+    text = "%d %%" % pct
+    if entry.get("total_mb") :
+        text += " (%s / %s, %.1f MB/s)" % (fmt_mb(entry.get("done_mb", 0)), fmt_mb(entry["total_mb"]), entry.get("speed", 0))
+    return "[COLOR yellow]%s[/COLOR]" % text
+
+def fmt_mb(mb) :
+    return "%.1f GB" % (mb / 1024.0) if mb >= 1024 else "%d MB" % mb
+
+def progress_for_root() :
+    base = os.path.realpath(root_base(CUR_ROOT)) + os.sep
+    return {d: e for d, e in progress_all().items() if os.path.realpath(d).startswith(base)}
+
+def cancel_under(path) :
+    # zruší stahování souboru nebo všeho ve složce (soubor se po zrušení sám smaže)
+    real = os.path.realpath(path)
+    n = 0
+    for dest in progress_all() :
+        rd = os.path.realpath(dest)
+        if rd == real or rd.startswith(real + os.sep) :
+            n += 1 if cancel_download(dest) else 0
+    return n
 
 def pick_link(urls, key1, key2) :
     # stejný jazyk a kvalita jako u prvního videa, jinak nejbližší dostupná
@@ -635,6 +664,25 @@ def downmanage():
         except Exception as e :
             debug("downmanage delete error %s %s"%(p, e), 2)
     notify(translate(30402), tr(30426, deleted), time=4000)
+    xbmc.executebuiltin('Container.Refresh')
+
+@plugin.route('/downcancel')
+def downcancel():
+    use_root(root_arg())
+    path = plugin.args.get("path", [""])[0]
+    if path and dialog.yesno(translate(30402), translate(30444) + "?\n" + os.path.basename(path)) :
+        cancel_under(path)
+        if path in progress_all() and progress_all()[path].get("stale") :
+            # přerušené stahování (Kodi bylo mezitím zavřené): jen uklidit
+            from resources.lib.downThread import progress_remove
+            progress_remove(path)
+            if os.path.isfile(path) and inside_root(path) : delete_video(path)
+        notify(translate(30402), translate(30441), time=3000)
+        xbmc.sleep(1500)
+    xbmc.executebuiltin('Container.Refresh')
+
+@plugin.route('/downrefresh')
+def downrefresh():
     xbmc.executebuiltin('Container.Refresh')
 
 @plugin.route('/downdelete')
@@ -1268,6 +1316,14 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
             li = ListItem("[COLOR red]%s[/COLOR]" % label)
             li.setArt({'icon': 'DefaultIconError.png'})
             addDirectoryItem(plugin.handle, plugin.url_for(downmanage, root=CUR_ROOT, path=cur_dir, mode=mode), li, False)
+        progress = progress_for_root()
+        # aktivní stahování nahoře, pak čekající ve frontě
+        for dest, entry in sorted(progress.items(), key=lambda x: (x[1].get("percent", 0) < 0, x[1].get("title", ""))) :
+            li = ListItem("[B]%s[/B]  %s" % (entry.get("title", os.path.basename(dest)), progress_label(entry)))
+            li.setArt({'icon': get_icon("download.png")})
+            li.setProperty('infomenu', translate(30445))
+            li.addContextMenuItems([(translate(30444), "RunPlugin(%s)" % plugin.url_for(downcancel, root=CUR_ROOT, path=dest))])
+            addDirectoryItem(plugin.handle, plugin.url_for(downrefresh), li, False)
         if epi_id == "serials" :
             debug("show_plug_list download dir start %s"%start, 2) 
             dir_list , fil_list = xbmcvfs.listdir(start)
@@ -1326,11 +1382,14 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
                         debug("set_common_properties download watched error %s"%e, 2)
 
                     menu_list = []
-                    action = "container.update(\"%s\")" % plugin.url_for(downloaddel,query="serials",query1=str(item["_id"]),query2=str(item["name2"]),root=CUR_ROOT)
+                    action = "RunPlugin(%s)" % plugin.url_for(downloaddel,query="serials",query1=str(item["_id"]),query2=str(item["name2"]),root=CUR_ROOT)
                     menu_list.append((translate(30293), action))
                     li.addContextMenuItems(menu_list)
                     name2 = str(item["name2"]).split("+")
-                    view_items.append([f"{name2[0]}/{item['_id']}-{name2[-1]}.mp4", title])
+                    fpath = f"{name2[0]}/{item['_id']}-{name2[-1]}.mp4"
+                    if fpath in progress :
+                        li.setLabel(title + "  " + progress_label(progress[fpath]))
+                    view_items.append([fpath, title])
                     url = plugin.url_for(downloadPlay, query="serials", query1=str(item["_id"]), query2=str(item["name2"]), root=CUR_ROOT)
                     addDirectoryItem(plugin.handle, url, li, False)
                 except Exception as e :
@@ -1394,11 +1453,14 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
                         debug("set_common_properties download watched error %s"%e, 2)
 
                     menu_list = []
-                    action = "container.update(\"%s\")" % plugin.url_for(downloaddel,query="movies",query1=str(item["_id"]),query2=str(item["name2"]),root=CUR_ROOT)
+                    action = "RunPlugin(%s)" % plugin.url_for(downloaddel,query="movies",query1=str(item["_id"]),query2=str(item["name2"]),root=CUR_ROOT)
                     menu_list.append((translate(30293), action))
                     li.addContextMenuItems(menu_list)
                     name2 = str(item["name2"]).split("+")
-                    view_items.append([f"{name2[0]}/{item['_id']}-{name2[-1]}.mp4", title])
+                    fpath = f"{name2[0]}/{item['_id']}-{name2[-1]}.mp4"
+                    if fpath in progress :
+                        li.setLabel(str(title) + "  " + progress_label(progress[fpath]))
+                    view_items.append([fpath, title])
                     url = plugin.url_for(downloadPlay, query="movies", query1=str(item["_id"]), query2=str(item["name2"]), root=CUR_ROOT)
                     addDirectoryItem(plugin.handle, url, li, False)
                 except Exception as e :
@@ -2263,6 +2325,7 @@ def downloaddel():
     filpath = moviesPath if  mov_ser == "movies" else seriesPath
     filename = f"{name2[0]}/{m_id}-{name2[1]}.mp4"
     debug("downloaddel Delete file filename %s"%filename,2)
+    cancel_under(filename)
     try :
         if xbmcvfs.exists(filename) :
             result = xbmcvfs.delete(filename)

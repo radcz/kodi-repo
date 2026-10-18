@@ -8,10 +8,10 @@
         </dir>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="cs_CZ">Vlastní repozitář doplňků (FreeVideo.cz, Sosac.TV s opravami)</summary>
+        <summary lang="cs_CZ">Vlastní repozitář doplňků (Video FREE, Sosac.TV s opravami)</summary>
         <summary lang="en_GB">Personal add-on repository</summary>
-        <description lang="cs_CZ">Repozitář s doplňky FreeVideo.cz a Sosac.TV (opravená verze) a jejich aktualizacemi.</description>
-        <description lang="en_GB">Repository with the FreeVideo.cz and patched Sosac.TV add-ons and their updates.</description>
+        <description lang="cs_CZ">Repozitář s doplňky Video FREE a Sosac.TV (opravená verze) a jejich aktualizacemi.</description>
+        <description lang="en_GB">Repository with the Video FREE and patched Sosac.TV add-ons and their updates.</description>
         <platform>all</platform>
         <assets>
             <icon>icon.png</icon>

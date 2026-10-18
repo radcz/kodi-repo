@@ -21,94 +21,157 @@ def updDownList(url) :
                     f.write(str(i) + "\n")                
             f.close()
             
-def downloadTh(vid_name, url, dest):
-    global lastPd
-    thread_act2 = threading.enumerate()
-    debug("downloadTh threading.enumerate %s"%thread_act2, 2)
+PROGRESS_FILE = os.path.join(profilepath, "down_progress.json")
+STALE_SECONDS = 600   # záznam bez aktualizace déle než 10 min = přerušené stahování
+
+class DownloadCancelled(Exception) :
+    pass
+
+def _read_progress() :
+    try :
+        with open(PROGRESS_FILE, "r", encoding="utf-8") as f :
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
+    except Exception :
+        return {}
+
+def _write_progress(data) :
+    try :
+        tmp = PROGRESS_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f :
+            json.dump(data, f)
+        os.replace(tmp, PROGRESS_FILE)
+    except Exception as e :
+        debug("progress write error %s"%e, 2)
+
+def progress_update(dest, **fields) :
+    # sdílený stav stahování pro výpis "Stažené" (i mezi různými spuštěními doplňku)
+    with lock :
+        data = _read_progress()
+        entry = data.get(dest, {})
+        entry.update(fields)
+        now = time.time()
+        entry["ts"] = now
+        data[dest] = entry
+        owner = entry.get("owner")
+        if owner :
+            # položky stejné fronty jsou "živé", dokud fronta stahuje
+            for other in data.values() :
+                if other.get("owner") == owner :
+                    other["ts"] = now
+        _write_progress(data)
+        return entry
+
+def progress_remove(dest) :
+    with lock :
+        data = _read_progress()
+        if dest in data :
+            del data[dest]
+            _write_progress(data)
+
+def progress_all() :
+    # {cesta: {"title", "percent" (-1 = čeká ve frontě), "done_mb", "total_mb", "speed", "stale"}}
+    data = _read_progress()
+    now = time.time()
+    changed = False
+    for dest, entry in list(data.items()) :
+        age = now - entry.get("ts", 0)
+        if age > 86400 :
+            del data[dest]; changed = True
+            continue
+        entry["stale"] = age > STALE_SECONDS
+    if changed :
+        _write_progress(data)
+    return data
+
+def cancel_download(dest) :
+    if dest in _read_progress() :
+        progress_update(dest, cancel=True)
+        return True
+    return False
+
+def _fmt_mb(mb) :
+    return "%.1f GB" % (mb / 1024.0) if mb >= 1024 else "%d MB" % mb
+
+def downloadTh(vid_name, url, dest, owner=None):
+    """Stáhne jedno video. Průběh ukazuje lištou v rohu Kodi a zapisuje do down_progress.json."""
     vid_id = threading.current_thread().name
     lastPd[vid_id] = 0
-    
-    result = None
+    state = {"last_pct": -1, "last_write": 0, "t0": time.time(), "notified": 0}
+    bar = None
     try :
-        result = urlretrieve(url,dest,lambda nb, bs, fs, url=url: _pbhook(nb,bs,fs,url,vid_name))
+        bar = xbmcgui.DialogProgressBG()
+        bar.create(translate(30402), "%s - %s" % (vid_name, translate(30076)))
+    except Exception as e :
+        debug("progress bar error %s"%e, 2)
+        bar = None
+    if owner is None and _read_progress().get(dest, {}).get("cancel") :
+        return False
+    progress_update(dest, title=vid_name, percent=0, done_mb=0, total_mb=0, speed=0, owner=owner)
+
+    def hook(numblocks, blocksize, filesize) :
+        done = numblocks * blocksize
+        pct = int(min(done * 100 / filesize, 100)) if filesize > 0 else 0
+        now = time.time()
+        if pct == state["last_pct"] and now - state["last_write"] < 5 :
+            return
+        state["last_pct"] = pct
+        elapsed = max(now - state["t0"], 0.001)
+        speed = done / 1048576.0 / elapsed
+        done_mb, total_mb = done / 1048576.0, (filesize / 1048576.0 if filesize > 0 else 0)
+        entry = progress_update(dest, percent=pct, done_mb=round(done_mb, 1), total_mb=round(total_mb, 1), speed=round(speed, 2))
+        state["last_write"] = now
+        if entry.get("cancel") :
+            raise DownloadCancelled()
+        if bar :
+            try :
+                msg = "%s  %d %%" % (vid_name, pct)
+                if total_mb :
+                    msg += "  (%s / %s, %.1f MB/s)" % (_fmt_mb(done_mb), _fmt_mb(total_mb), speed)
+                bar.update(pct, translate(30402), msg)
+            except Exception :
+                pass
+        # původní oznámení po X % (nastavení "download-notify")
+        try :
+            if addon.getSetting('download-notify') == 'true' :
+                step = down_int[int(addon.getSetting('download-notify-every') or 0)]
+                if 0 < pct < 100 and pct - state["notified"] >= step :
+                    state["notified"] = pct
+                    notify(vid_name, "%s %s" % (translate(30077), pct), time=2000)
+        except Exception :
+            pass
+
+    result = None
+    cancelled = False
+    try :
+        result = urlretrieve(url, dest, hook)
+    except DownloadCancelled :
+        cancelled = True
+        notify(vid_name, translate(30441), time=4000)
     except Exception as e  :
         debug("download retrieve error %s"%str(e), 2)
-        notify(vid_name,"%s"%translate(30079),time=5000)
-    
-    if not result and os.path.exists(dest) : os.remove(dest)
-    '''
-    else :
-        updDownList(url)
-        
-    '''
-    debug("downloadTh %s"%(threading.current_thread().name),2)
-          
-        
- 
-def _pbhook(numblocks, blocksize, filesize, url,vid_name):
-    global lastP,lastPd
-    try : 
-        lock.acquire()
-        v_id = threading.current_thread().name
-        #debug("_pbhook 00 lastP[v_id] %s %s"%(v_id,lastPd[v_id]),2)
-        if not lastPd[v_id]  : lastPd[v_id] = 0
-        lastP = lastPd[v_id]
-        #debug("_pbhook 01 lastP[vid_name] %s %s"%(vid_name,lastPd[vid_name]),2)
-    except Exception as e :
-        debug("download _pbhook exception %s"%str(e), 2)
-    notifyEnabled = addon.getSetting('download-notify') == 'true'
-    notifyEvery = addon.getSetting('download-notify-every')
-    notifyPercent = down_int[int(notifyEvery)]
-    try:
-        #tt = threading.current_thread().name
-        #debug("_pbhook 1 %s"%(threading.current_thread().name),2)
-        percent = min((numblocks*blocksize*100)/filesize, 100) if filesize > 0 else 0
-        if notifyEnabled:
-            #if int(percent) > 0 and ((percent-lastP[vid_name]) >= int(notifyPercent)) :
-            if int(percent) > 0 and ((percent-lastP) >= int(notifyPercent)) :
-                #message = ' %s percent  - %s KB/s %s' % (percent,speed, esTime)
-                #notify(message, filename)
-                
-                lastP = int(percent)
-                try :
-                    lastPd[v_id] = int(percent)
-                except Exception as e :
-                    debug("download _pbhook lastP[v_id] = int(percent) exception %s"%str(e), 2)
-                print("passage pour percent ",percent)
-                
-                notify(vid_name,"%s %s "%(translate(30077),str(int(percent))),time=2000)
+        notify(vid_name, translate(30079), time=5000)
+    finally :
+        if bar :
+            try : bar.close()
+            except Exception : pass
+        progress_remove(dest)
 
-        if int(percent) >= int(100) :
-            notify(vid_name,"%s %s"%(translate(30078),str(percent)),time=2000)
-            try :
-                updDownList(url)
-            except Exception as e :
-                debug("_pbhook updDownList exception %s"%str(e), 2)
-            #return True
-        #debug("_pbhook 2 %s"%(threading.current_thread().name),2)
-        '''
+    if (cancelled or not result) and os.path.exists(dest) :
+        try : os.remove(dest)
+        except OSError : pass
+    if result and not cancelled :
+        notify(vid_name, translate(30078), time=4000)
         try :
-            debug("_pbhook 3 lastP[v_id] %s %s"%(vid_name,lastPd[v_id]),2)
+            updDownList(url)
         except Exception as e :
-            debug("download _pbhook 3 exception ", str(e))
-        '''
-        lock.release()
-    except Exception as e :
-        debug("_pbhook download exception %s"%str(e), 2)
-        try : lock.release()
-        except RuntimeError : pass
-        percent = locals().get("percent", 0)
-        if int(percent) >= int(100) :
-            notify(vid_name,"%s %s"%(translate(30078),str(percent)),time=2000)
-            return True
-        else :
-            notify(vid_name,"%s %s"%(translate(30079),str(percent)),time=2000)
-            return False
-    
-    
-    
+            debug("updDownList error %s"%e, 2)
+    return bool(result) and not cancelled
 
-    
+def _pbhook(numblocks, blocksize, filesize, url, vid_name):
+    # ponecháno kvůli kompatibilitě, průběh teď řeší downloadTh
+    return None
+
 def downloadFil(url, dest):
     thread_act = threading.enumerate()
     print("Main thread name: {}".format(threading.current_thread().name))
@@ -151,14 +214,16 @@ def run_queue(items) :
             if monitor.abortRequested() :
                 break
             title = it.get("title") or os.path.basename(it["dest"])
+            if _read_progress().get(it["dest"], {}).get("cancel") :
+                progress_remove(it["dest"])
+                continue
             try :
                 url = it["resolve"]() if callable(it["resolve"]) else it["resolve"]
                 if not url :
                     raise Exception("no stream url")
                 notify(title, "%s (%s/%s)" % (translate(30076), n, total), time=3000)
                 lastPd[threading.current_thread().name] = 0
-                downloadTh(title, url, it["dest"])
-                if os.path.isfile(it["dest"]) and os.path.getsize(it["dest"]) > 0 :
+                if downloadTh(title, url, it["dest"], owner) :
                     done += 1
                     if it.get("subs") :
                         try :
@@ -167,11 +232,15 @@ def run_queue(items) :
                             debug("run_queue subs error %s"%e, 2)
             except Exception as e :
                 debug("run_queue item error %s %s"%(title, e), 2)
+                progress_remove(it["dest"])
                 notify(title, translate(30079), time=3000)
         notify(translate(30402), tr(30419, done, total), time=8000)
 
     if not items :
         return None
+    owner = "%s-%s" % (os.getpid(), int(time.time() * 1000))
+    for it in items :
+        progress_update(it["dest"], title=it.get("title") or os.path.basename(it["dest"]), percent=-1, done_mb=0, total_mb=0, speed=0, cancel=False, owner=owner)
     notify(translate(30402), tr(30431, len(items)), time=4000)
     th = threading.Thread(target=worker, name="sosac-queue")
     th.start()

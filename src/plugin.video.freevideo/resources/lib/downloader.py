@@ -107,7 +107,7 @@ class Downloader:
         WINDOW.clearProperty(PROP_CANCEL)
         monitor = xbmc.Monitor()
         progress = xbmcgui.DialogProgressBG()
-        progress.create('FreeVideo.cz', 'Připravuji stahování...')
+        progress.create('Video FREE', 'Připravuji stahování...')
         done = failed = 0
         try:
             while not monitor.abortRequested() and WINDOW.getProperty(PROP_CANCEL) != '1':

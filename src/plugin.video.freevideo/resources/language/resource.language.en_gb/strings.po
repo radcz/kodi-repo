@@ -1,5 +1,5 @@
 # Kodi Media Center language file
-# Addon Name: FreeVideo.cz
+# Addon Name: Video FREE
 # Addon id: plugin.video.freevideo
 msgid ""
 msgstr ""

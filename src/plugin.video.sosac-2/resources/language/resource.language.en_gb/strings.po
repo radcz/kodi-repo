@@ -1488,3 +1488,23 @@ msgstr ""
 msgctxt "#30440"
 msgid "Off = the Sosac skin is used everywhere (no 'Keep skin?' question). On = original behaviour: the skin switches when entering and leaving Sosac and Kodi asks every time."
 msgstr ""
+
+msgctxt "#30441"
+msgid "Download cancelled"
+msgstr ""
+
+msgctxt "#30442"
+msgid "waiting in queue"
+msgstr ""
+
+msgctxt "#30443"
+msgid "interrupted"
+msgstr ""
+
+msgctxt "#30444"
+msgid "Cancel download"
+msgstr ""
+
+msgctxt "#30445"
+msgid "Downloading – click to refresh"
+msgstr ""

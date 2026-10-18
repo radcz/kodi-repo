@@ -90,8 +90,12 @@ def addon_icon():
     d.polygon([(350, 222), (350, 290), (396, 256)], fill=(255, 255, 255, 255))
     sparkle(d, 440, 82, 30, (255, 255, 255, 255))
     # nápis
-    f = font(64)
-    text = 'freevideo'
+    text = 'Video FREE'
+    size = 64
+    f = font(size)
+    while d.textlength(text, font=f) > S - 60 and size > 30:
+        size -= 2
+        f = font(size)
     w = d.textlength(text, font=f)
     glow(bg, lambda dd, c: dd.text(((S - w) / 2, 412), text, font=f, fill=c), (60, 0, 80, 200), 8)
     d = ImageDraw.Draw(bg)
