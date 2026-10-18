@@ -66,6 +66,7 @@ class XVideos(common.Site):
     ID = 'xvideos'
     NAME = 'xVideos'
     BASE_URL = 'https://www.xvideos.com/'
+    LESBIAN_MENU = [('Lesbičky', '/c/Lesbian-26')]
     LANG = 'cs-CZ,cs;q=0.9,en;q=0.6'
 
     def menu(self, sub=None):

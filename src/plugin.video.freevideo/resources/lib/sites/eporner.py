@@ -19,6 +19,8 @@ class Eporner(common.Site):
     ID = 'eporner'
     NAME = 'Eporner'
     BASE_URL = 'https://www.eporner.com/'
+    LESBIAN_MENU = [('Lesbičky', '/cat/lesbians/'),
+                    ('Lesbičky – nejlépe hodnocené', '/cat/lesbians/SORT-top-rated/')]
 
     def menu(self, sub=None):
         return [

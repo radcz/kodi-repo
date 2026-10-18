@@ -12,6 +12,7 @@ class XNXX(common.Site):
     ID = 'xnxx'
     NAME = 'XNXX'
     BASE_URL = 'https://www.xnxx.com/'
+    LESBIAN_MENU = [('Lesbičky', '/search/lesbian')]
     LANG = 'cs-CZ,cs;q=0.9,en;q=0.6'
 
     def menu(self, sub=None):

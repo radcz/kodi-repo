@@ -10,6 +10,9 @@ class Pornhub(common.Site):
     ID = 'pornhub'
     NAME = 'Pornhub'
     BASE_URL = 'https://www.pornhub.com/'
+    LESBIAN_MENU = [('Lesbičky – nejnovější', '/video?c=27&o=cm'),
+                    ('Lesbičky – nejsledovanější', '/video?c=27&o=mv'),
+                    ('Lesbičky – nejlépe hodnocené', '/video?c=27&o=tr')]
     # potvrzení věku 18+ (stejné jako kliknutí na „Je mi 18“)
     COOKIES = {'accessAgeDisclaimerPH': '1', 'accessAgeDisclaimerUK': '1'}
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Video FREE - doplněk pro Kodi 21 (FreeVideo.cz, xVideos, XNXX, xHamster, Pornhub, Eporner)."""
+"""Video FREE - doplněk pro Kodi 21 (FreeVideo.cz, YourLesbians, xHamster, Pornhub, xVideos, XNXX,
+Eporner, YouPorn, RedTube, Tube8). Lesbické výpisy a kategorie jsou vždy nahoře."""
 import json
 import os
 import sys
@@ -27,6 +28,7 @@ BASE = sys.argv[0]
 HANDLE = int(sys.argv[1]) if len(sys.argv) > 1 else -1
 
 QUALITY_VALUES = [0, 2160, 1080, 720, 540]  # index nastavení -> max. výška (0 = nejvyšší)
+LES = '[COLOR hotpink]%s[/COLOR]'
 
 
 def log(msg, level=xbmc.LOGINFO):
@@ -80,6 +82,7 @@ def downloader():
 # --- obrazovky ---
 
 def main_menu():
+    add_dir(LES % '[B]Lesbičky – všechny weby[/B]', {'action': 'lesbian_all'}, thumb=ICON)
     for site in sites.SITES:
         add_dir(site.NAME, {'action': 'site', 'site': site.ID}, thumb=site_icon(site))
     folder = downloader().folder(ask=False)
@@ -91,8 +94,23 @@ def main_menu():
     end_dir()
 
 
+def lesbian_all():
+    """Lesbické výpisy všech webů na jednom místě."""
+    for site in sites.SITES:
+        entries = site.lesbian_menu()
+        if not entries:
+            continue
+        label, action, params = entries[0]
+        add_dir(LES % site.NAME + '  [COLOR gray]%s[/COLOR]' % label,
+                dict(params, action=action, site=site.ID), thumb=site_icon(site))
+    end_dir()
+
+
 def site_menu(site, sub=None):
     icon = site_icon(site)
+    if sub is None:
+        for label, action, params in site.lesbian_menu():
+            add_dir(LES % label, dict(params, action=action, site=site.ID), thumb=icon)
     for label, action, params in site.menu(sub):
         if action == 'search':
             add_dir(label, {'action': 'search_menu', 'site': site.ID}, thumb=icon)
@@ -148,11 +166,13 @@ def list_videos(site, url, page_no=1):
 
 def list_categories(site, url):
     try:
-        cats = site.get_categories(url)
+        lesbian, others = site.categories_with_lesbian_first(url)
     except common.ScraperError as exc:
         return fail_dir(str(exc))
-    for c in cats:
-        label = c['title'] + ('  [COLOR gray](%s)[/COLOR]' % c['count'] if c['count'] else '')
+    # lesbické kategorie vždy nahoře a zvýrazněné, ostatní pod nimi
+    for c, les in [(c, True) for c in lesbian] + [(c, False) for c in others]:
+        label = (LES % c['title'] if les else c['title']) + \
+            ('  [COLOR gray](%s)[/COLOR]' % c['count'] if c['count'] else '')
         add_dir(label, {'action': 'list', 'site': site.ID, 'url': c['url']}, thumb=c['thumb'] or site_icon(site))
     end_dir('files', cache=False)
 
@@ -178,6 +198,8 @@ def save_history(items):
 
 
 def search_menu(site):
+    if site.LESBIAN_MENU and site.ID != 'yourlesbians':
+        add_dir(LES % '[B]Hledat jen lesbické na %s...[/B]' % site.NAME, {'action': 'search', 'site': site.ID, 'les': '1'})
     add_dir('[B]Nové hledání na %s...[/B]' % site.NAME, {'action': 'search', 'site': site.ID})
     for q in load_history():
         li = xbmcgui.ListItem(q)
@@ -189,16 +211,20 @@ def search_menu(site):
     end_dir(cache=False)
 
 
-def search(site, query=None):
+def search(site, query=None, lesbian=False):
     if not query:
-        query = xbmcgui.Dialog().input('Hledat na %s' % site.NAME, type=xbmcgui.INPUT_ALPHANUM).strip()
+        heading = ('Hledat lesbická videa na %s' if lesbian else 'Hledat na %s') % site.NAME
+        query = xbmcgui.Dialog().input(heading, type=xbmcgui.INPUT_ALPHANUM).strip()
         xbmcplugin.endOfDirectory(HANDLE, succeeded=False)
         if query:
             # výsledky pod vlastní URL s dotazem, aby se při návratu znovu neptal
-            xbmc.executebuiltin('Container.Update(%s)' % build_url(action='search', site=site.ID, q=query))
+            xbmc.executebuiltin('Container.Update(%s)' % build_url(action='search', site=site.ID, q=query,
+                                                                    les='1' if lesbian else ''))
         return
     history = [q for q in load_history() if q.lower() != query.lower()]
     save_history([query] + history)
+    if lesbian and not common.is_lesbian(query):
+        query = '%s %s' % (query, site.LESBIAN_SEARCH)
     list_videos(site, site.search_url(query))
 
 
@@ -295,7 +321,9 @@ def router(paramstring):
     elif action == 'search_menu':
         search_menu(site)
     elif action == 'search':
-        search(site, params.get('q'))
+        search(site, params.get('q'), params.get('les') == '1')
+    elif action == 'lesbian_all':
+        lesbian_all()
     elif action == 'history_del':
         history_delete(params.get('q', ''))
     elif action == 'download':

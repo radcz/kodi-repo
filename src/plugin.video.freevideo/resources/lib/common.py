@@ -15,6 +15,15 @@ class ScraperError(Exception):
     pass
 
 
+LESBIAN_RE = re.compile(r'lesb|lez|girl[\s_-]*on[\s_-]*girl|girls?[\s_-]*only|sapph|scissor|tribbing|yuri|'
+                        r'lesbick|lesbičk|lesbian', re.I)
+
+
+def is_lesbian(text):
+    """Pozná lesbickou kategorii i pod jinými názvy (Lesbian, Lesbičky, Girl on Girl, Scissoring...)."""
+    return bool(LESBIAN_RE.search(text or ''))
+
+
 class Site:
     """Základ modulu webu: HTTP session s UA, časovým limitem a srozumitelnými chybami."""
     ID = ''
@@ -22,6 +31,12 @@ class Site:
     BASE_URL = ''
     LANG = 'en-US,en;q=0.8'
     COOKIES = {}
+    # lesbické výpisy, které se ukazují vždy nahoře: (popisek, cesta[, akce])
+    LESBIAN_MENU = []
+    # lesbické kategorie, které web v seznamu kategorií neuvádí: (název, cesta)
+    LESBIAN_CATS = []
+    # slovo, které se přidá k dotazu při "Hledat jen lesbické"
+    LESBIAN_SEARCH = 'lesbian'
 
     def __init__(self):
         self._session = None
@@ -80,6 +95,24 @@ class Site:
         """Vrátí (streamy seřazené od nejvyšší kvality, info o videu).
         Stream = {'height': int, 'url': str, 'type': 'mp4'|'hls', 'headers': {...}}"""
         raise NotImplementedError
+
+    def lesbian_menu(self):
+        out = []
+        for entry in self.LESBIAN_MENU:
+            label, path = entry[0], entry[1]
+            action = entry[2] if len(entry) > 2 else 'list'
+            out.append((label, action, {'url': self.absolute(path)}))
+        return out
+
+    def categories_with_lesbian_first(self, url):
+        cats = self.get_categories(url)
+        known = {c['url'] for c in cats}
+        for name, path in self.LESBIAN_CATS:
+            u = self.absolute(path)
+            if u not in known:
+                cats.append({'url': u, 'title': name, 'thumb': '', 'count': ''})
+        les = [c for c in cats if is_lesbian(c['title']) or is_lesbian(c['url'])]
+        return les, [c for c in cats if c not in les]
 
     def play_headers(self, referer=None):
         return {'User-Agent': USER_AGENT, 'Referer': referer or self.BASE_URL}

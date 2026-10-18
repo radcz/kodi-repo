@@ -33,6 +33,9 @@ class XHamster(common.Site):
     ID = 'xhamster'
     NAME = 'xHamster'
     BASE_URL = 'https://xhamster.com/'
+    LESBIAN_MENU = [('Lesbičky – nejnovější', '/categories/lesbian/newest'),
+                    ('Lesbičky – nejlepší', '/categories/lesbian/best')]
+    LESBIAN_CATS = [('Lesbian', '/categories/lesbian'), ('Lesbian Scissoring', '/tags/scissoring')]
 
     def menu(self, sub=None):
         return [

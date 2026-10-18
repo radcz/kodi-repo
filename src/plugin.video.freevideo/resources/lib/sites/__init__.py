@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Seznam podporovaných webů."""
-from resources.lib.sites import freevideo, xvideos, xnxx, xhamster, pornhub, eporner
+"""Seznam podporovaných webů (pořadí = pořadí v hlavním menu)."""
+from resources.lib.sites import freevideo, xvideos, xnxx, xhamster, pornhub, eporner, aylo, yourlesbians
 
-SITES = [freevideo.site, xvideos.site, xnxx.site, xhamster.site, pornhub.site, eporner.site]
+SITES = [freevideo.site, yourlesbians.site, xhamster.site, pornhub.site, xvideos.site, xnxx.site,
+         eporner.site, aylo.youporn, aylo.redtube, aylo.tube8]
 BY_ID = {s.ID: s for s in SITES}
 
 

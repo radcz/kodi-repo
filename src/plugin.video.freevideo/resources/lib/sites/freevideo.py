@@ -7,6 +7,10 @@ class FreeVideo(common.Site):
     ID = 'freevideo'
     NAME = 'FreeVideo.cz'
     BASE_URL = scraper.BASE_URL + '/'
+    LESBIAN_MENU = [('Lesbičky – nejnovější', '/lesbicky/vase-videa/nejnovejsi/'),
+                    ('Lesbičky – nejnavštěvovanější', '/lesbicky/vase-videa/nejnavstevovanejsi/'),
+                    ('Lesbičky – kategorie', '/lesbicky/vase-videa/kategorie/', 'categories')]
+    LESBIAN_SEARCH = 'lesbicky'
 
     def menu(self, sub=None):
         if sub == 'sections':
