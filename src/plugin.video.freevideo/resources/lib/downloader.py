@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Stahování videí na pozadí s jednoduchou frontou (jeden stahovací proces najednou)."""
+"""Stahování videí (MP4 i HLS) na pozadí s jednoduchou frontou (jeden stahovací proces najednou)."""
 import json
 import os
 import re
 import time
+from urllib.parse import urljoin
 
 import requests
 import xbmc
 import xbmcgui
 import xbmcvfs
 
-from resources.lib import scraper
+from resources.lib import common, sites
 
 CHUNK = 1024 * 1024
 WINDOW = xbmcgui.Window(10000)
@@ -138,55 +139,125 @@ class Downloader:
             self.notify('Stahování dokončeno: %d OK%s' % (done, ', %d chyb' % failed if failed else ''),
                         xbmcgui.NOTIFICATION_INFO)
 
+    def _cancelled(self, monitor):
+        return monitor.abortRequested() or WINDOW.getProperty(PROP_CANCEL) == '1'
+
     def _download(self, item, progress, heading, monitor):
         folder = self.folder(ask=False)
         if not folder:
             raise IOError('Není nastavena složka pro stahování')
-        streams, info = scraper.get_streams(item['url'])
-        stream = scraper.pick_stream(streams, self.max_height())
+        site = sites.get(item.get('site'))
+        streams, info = site.get_streams(item['url'])
+        stream = common.pick_stream(streams, self.max_height())
         if not stream:
             raise IOError('video nemá stream')
         title = item.get('title') or info.get('title') or 'video'
-        height = next((h for h, u in streams if u == stream), 0)
-        name = safe_filename(title) + (' [%dp]' % height if height else '') + '.mp4'
+        hls = stream['type'] == 'hls'
+        playlist = None
+        if hls:
+            playlist = self._media_playlist(site, stream)
+        ext = '.mp4' if not hls or playlist['init'] else '.ts'
+        name = safe_filename(title) + (' [%dp]' % stream['height'] if stream['height'] else '') + ext
         target = join_path(folder, name)
         if xbmcvfs.exists(target):
             self.log('Už staženo: %s' % target)
             return True
         part = target + '.part'
         progress.update(0, heading, title)
-        self.log('Stahuji %s -> %s' % (stream, target))
-        resp = requests.get(stream, stream=True, timeout=scraper.TIMEOUT,
-                            headers={'User-Agent': scraper.USER_AGENT, 'Referer': scraper.BASE_URL + '/'})
-        resp.raise_for_status()
-        size = int(resp.headers.get('Content-Length') or 0)
-        got = 0
-        last = 0
+        self.log('Stahuji (%s, %dp) %s -> %s' % (stream['type'], stream['height'], stream['url'], target))
         ok = False
         f = xbmcvfs.File(part, 'wb')
         try:
+            if hls:
+                ok = self._write_hls(f, part, playlist, stream, progress, heading, title, monitor)
+            else:
+                ok = self._write_mp4(f, part, stream, progress, heading, title, monitor)
+        finally:
+            f.close()
+            if not ok:
+                xbmcvfs.delete(part)
+        if not ok:
+            return False
+        if not xbmcvfs.rename(part, target):
+            raise IOError('nelze přejmenovat %s' % part)
+        return True
+
+    def _write(self, f, part, data):
+        if not f.write(bytearray(data)):
+            raise IOError('nelze zapisovat do %s' % part)
+
+    def _write_mp4(self, f, part, stream, progress, heading, title, monitor):
+        resp = requests.get(stream['url'], stream=True, timeout=common.TIMEOUT, headers=stream.get('headers'))
+        try:
+            resp.raise_for_status()
+            size = int(resp.headers.get('Content-Length') or 0)
+            got = 0
+            last = 0
             for chunk in resp.iter_content(CHUNK):
-                if monitor.abortRequested() or WINDOW.getProperty(PROP_CANCEL) == '1':
+                if self._cancelled(monitor):
                     return False
                 if not chunk:
                     continue
-                if not f.write(bytearray(chunk)):
-                    raise IOError('nelze zapisovat do %s' % part)
+                self._write(f, part, chunk)
                 got += len(chunk)
                 if time.time() - last > 1:
                     last = time.time()
                     pct = int(got * 100 / size) if size else 0
                     progress.update(pct, heading, '%s  (%d / %d MB)' % (title, got >> 20, size >> 20))
-            ok = not size or got >= size
-            if not ok:
+            if size and got < size:
                 raise IOError('stahování přerušeno (%d z %d B)' % (got, size))
+            return True
         finally:
-            f.close()
             resp.close()
-            if not ok:
-                xbmcvfs.delete(part)
-        if not xbmcvfs.rename(part, target):
-            raise IOError('nelze přejmenovat %s' % part)
+
+    def _media_playlist(self, site, stream):
+        """Načte media playlist HLS: seznam segmentů a případný inicializační segment."""
+        text = site.fetch(stream['url'], headers=stream.get('headers'))
+        if '#EXT-X-STREAM-INF' in text:  # ještě hlavní playlist -> vezmi nejlepší variantu
+            variants = common.hls_variants(site, stream['url'], stream.get('headers'))
+            stream = dict(stream, url=variants[0][1])
+            text = site.fetch(stream['url'], headers=stream.get('headers'))
+        for line in text.splitlines():
+            if line.startswith('#EXT-X-KEY') and 'METHOD=NONE' not in line:
+                raise IOError('video je šifrované, stáhnout ho nelze (přehrát ano)')
+        init = None
+        m = re.search(r'#EXT-X-MAP:.*?URI="([^"]+)"', text)
+        if m:
+            init = urljoin(stream['url'], m.group(1))
+        segs = [urljoin(stream['url'], l.strip()) for l in text.splitlines()
+                if l.strip() and not l.startswith('#')]
+        if not segs:
+            raise IOError('HLS playlist je prázdný')
+        return {'init': init, 'segments': segs}
+
+    def _get(self, url, headers, tries=3):
+        for attempt in range(tries):
+            try:
+                r = requests.get(url, timeout=common.TIMEOUT, headers=headers)
+                r.raise_for_status()
+                return r.content
+            except requests.RequestException:
+                if attempt == tries - 1:
+                    raise
+                time.sleep(1 + attempt)
+
+    def _write_hls(self, f, part, playlist, stream, progress, heading, title, monitor):
+        headers = stream.get('headers')
+        if playlist['init']:
+            self._write(f, part, self._get(playlist['init'], headers))
+        segs = playlist['segments']
+        got = 0
+        last = 0
+        for i, seg in enumerate(segs):
+            if self._cancelled(monitor):
+                return False
+            data = self._get(seg, headers)
+            self._write(f, part, data)
+            got += len(data)
+            if time.time() - last > 1 or i == len(segs) - 1:
+                last = time.time()
+                progress.update(int((i + 1) * 100 / len(segs)), heading,
+                                '%s  (%d / %d částí, %d MB)' % (title, i + 1, len(segs), got >> 20))
         return True
 
 

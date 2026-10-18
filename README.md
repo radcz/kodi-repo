@@ -6,7 +6,7 @@ Veřejný repozitář doplňků pro [Kodi](https://kodi.tv) 19, 20 a 21. Funguje
 |---|---|---|
 | `repository.radek` | 1.0.2 | tento repozitář, přes který se doplňky instalují a aktualizují |
 | `plugin.video.sosac-2` | 3.1.2.4 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
-| `plugin.video.freevideo` | 1.2.0 | Video FREE (FreeVideo.cz) |
+| `plugin.video.freevideo` | 1.3.0 | Video FREE: FreeVideo.cz, xVideos, XNXX, xHamster, Pornhub, Eporner (přehrávání i stahování) |
 | `repository.dobbelina` | 1.0.4.1 | repozitář Dobbelina (Cumination) s vlastní ikonou |
 
 Ke stažení jsou také `repository.sosacRepo`, `repository.prehraj.to` a `repository.slyguy` (HBO Max).
