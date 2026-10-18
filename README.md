@@ -22,13 +22,13 @@ V repozitáři nejsou žádná hesla. Přihlašovací údaje k Sosacu a Streamuj
 
 1. **Nastavení (ozubené kolo) → Systém → Doplňky** → zapnout **Neznámé zdroje** → potvrdit **Ano**.
 2. **Nastavení → Správce souborů → Přidat zdroj → `<Žádný>`** → napsat
-   `https://radcz.github.io/kodi-repo/` → **OK** → název zdroje `radek` → **OK**.
-3. **Doplňky → ikona otevřené krabice (vlevo nahoře) → Instalovat ze ZIP souboru → `radek`**
+   `https://radcz.github.io/kodi-repo/` → **OK** → název zdroje `radcz` → **OK**.
+3. **Doplňky → ikona otevřené krabice (vlevo nahoře) → Instalovat ze ZIP souboru → `radcz`**
    → **`repository.radek-1.0.3.zip`**. Počkejte na hlášku „Doplněk povolen“.
 4. **Instalovat z repozitáře → radcz Repository → Video doplňky** → **Sosac.TV** (a podle chuti **Video FREE**) → **Instalovat**.
    Kodi samo doinstaluje potřebné knihovny (requests, six, routing) z oficiálního repozitáře Kodi.
 5. **Restartujte Kodi.** Sosac při prvním startu nainstaluje svůj vzhled a přidá do Správce souborů zdroje
-   (radek, Sosac, Prehraj.to, dobbelina, SlyGuy).
+   (radcz, Sosac, Prehraj.to, dobbelina, SlyGuy).
 6. **Doplňky → Sosac.TV → Nastavení → Účty**: zadejte jméno a heslo k Sosacu a Streamuj.tv.
 
 Další repozitáře (Dobbelina, Prehraj.to, SlyGuy) nainstalujete stejně, v kroku 3 jen vyberete jejich ZIP.
