@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="repository.radek" name="[COLOR deepskyblue]Radek[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="1.0.1" provider-name="Radek">
+    <extension point="xbmc.addon.repository" name="Radek Repository">
+        <dir>
+            <info compressed="false">https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml</info>
+            <checksum>https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml.md5</checksum>
+            <datadir zip="true">https://raw.githubusercontent.com/radcz/kodi-repo/main/</datadir>
+        </dir>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="cs_CZ">Vlastní repozitář doplňků (FreeVideo.cz, Sosac.TV s opravami)</summary>
+        <summary lang="en_GB">Personal add-on repository</summary>
+        <description lang="cs_CZ">Repozitář s doplňky FreeVideo.cz a Sosac.TV (opravená verze) a jejich aktualizacemi.</description>
+        <description lang="en_GB">Repository with the FreeVideo.cz and patched Sosac.TV add-ons and their updates.</description>
+        <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+        </assets>
+    </extension>
+</addon>

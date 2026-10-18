@@ -1,0 +1,60 @@
+# Kodi Media Center language file
+# Addon Name: FreeVideo.cz
+# Addon id: plugin.video.freevideo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: cs_CZ\n"
+
+msgctxt "#30000"
+msgid "General"
+msgstr "Obecné"
+
+msgctxt "#30001"
+msgid "Maximum video quality"
+msgstr "Maximální kvalita videa"
+
+msgctxt "#30002"
+msgid "Highest stream not exceeding the selected resolution is played."
+msgstr "Přehraje se nejlepší stream, který nepřesahuje zvolené rozlišení."
+
+msgctxt "#30010"
+msgid "Highest available"
+msgstr "Nejvyšší dostupná"
+
+msgctxt "#30011"
+msgid "2160p (4K)"
+msgstr "2160p (4K)"
+
+msgctxt "#30012"
+msgid "1080p"
+msgstr "1080p"
+
+msgctxt "#30013"
+msgid "720p"
+msgstr "720p"
+
+msgctxt "#30014"
+msgid "540p"
+msgstr "540p"
+
+msgctxt "#30015"
+msgid "Always ask"
+msgstr "Vždy se zeptat"
+
+msgctxt "#30020"
+msgid "Download"
+msgstr "Stahování"
+
+msgctxt "#30021"
+msgid "Download folder"
+msgstr "Složka pro stažená videa"
+
+msgctxt "#30022"
+msgid "Where downloaded videos are saved. If empty, you will be asked on first download."
+msgstr "Kam se ukládají stažená videa. Když je prázdná, doplněk se zeptá při prvním stahování."
+
+msgctxt "#30023"
+msgid "Download quality (maximum)"
+msgstr "Kvalita stahování (maximální)"

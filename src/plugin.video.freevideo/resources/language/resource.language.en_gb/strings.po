@@ -1,0 +1,60 @@
+# Kodi Media Center language file
+# Addon Name: FreeVideo.cz
+# Addon id: plugin.video.freevideo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
+
+msgctxt "#30000"
+msgid "General"
+msgstr ""
+
+msgctxt "#30001"
+msgid "Maximum video quality"
+msgstr ""
+
+msgctxt "#30002"
+msgid "Highest stream not exceeding the selected resolution is played."
+msgstr ""
+
+msgctxt "#30010"
+msgid "Highest available"
+msgstr ""
+
+msgctxt "#30011"
+msgid "2160p (4K)"
+msgstr ""
+
+msgctxt "#30012"
+msgid "1080p"
+msgstr ""
+
+msgctxt "#30013"
+msgid "720p"
+msgstr ""
+
+msgctxt "#30014"
+msgid "540p"
+msgstr ""
+
+msgctxt "#30015"
+msgid "Always ask"
+msgstr ""
+
+msgctxt "#30020"
+msgid "Download"
+msgstr ""
+
+msgctxt "#30021"
+msgid "Download folder"
+msgstr ""
+
+msgctxt "#30022"
+msgid "Where downloaded videos are saved. If empty, you will be asked on first download."
+msgstr ""
+
+msgctxt "#30023"
+msgid "Download quality (maximum)"
+msgstr ""
