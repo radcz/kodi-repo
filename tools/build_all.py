@@ -32,12 +32,14 @@ ADDONS = {
     'plugin.video.freevideo': os.path.join(WORK, 'freevideo', 'src', 'plugin.video.freevideo'),
     'plugin.video.prehrajto': os.path.join(WORK, 'prehrajto', 'src', 'plugin.video.prehrajto'),  # česká verze
     'repository.dobbelina': os.path.join(WORK, 'repozitare', 'repository.dobbelina'),
+    # HBO Max: repozitář SlyGuy jde instalovat přímo z radcz Repository (samotné slyguy.max
+    # a script.module.slyguy se sem nekopírují, aktualizují se ze SlyGuy)
+    'repository.slyguy': os.path.join(WORK, 'repozitare', 'repository.slyguy'),
 }
 # jen ZIP ke stažení (aktualizují se ze svých vlastních zdrojů)
 EXTRA = {
     'repository.sosacRepo': os.path.join(WORK, 'repozitare', 'repository.sosacRepo'),
     'repository.prehraj.to': os.path.join(WORK, 'repozitare', 'repository.prehraj.to'),
-    'repository.slyguy': os.path.join(WORK, 'repozitare', 'repository.slyguy'),
 }
 SKIP_DIRS = {'__pycache__', '.git', 'tests', 'addon_data', 'userdata'}
 # session.json apod. ukládala původní verze Prehraj.to do složky doplňku (přihlášení!) - nikdy nebalit

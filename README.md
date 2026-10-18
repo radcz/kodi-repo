@@ -5,12 +5,13 @@ Veřejný repozitář doplňků pro [Kodi](https://kodi.tv) 19, 20 a 21. Funguje
 | Doplněk | Verze | Popis |
 |---|---|---|
 | `repository.radek` | 1.0.3 | tento repozitář, přes který se doplňky instalují a aktualizují |
-| `plugin.video.sosac-2` | 3.1.2.4 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
+| `plugin.video.sosac-2` | 3.1.2.5 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
 | `plugin.video.prehrajto` | 2.0.5.1 | Prehraj.to česky: hledání s náhledy, stahování na pozadí, výběr více videí (vyžaduje Premium) |
 | `plugin.video.freevideo` | 1.3.1 | Video FREE: FreeVideo.cz, xVideos, XNXX, xHamster, Pornhub, Eporner (přehrávání i stahování) |
 | `repository.dobbelina` | 1.0.4.1 | repozitář Dobbelina (Cumination) s vlastní ikonou |
+| `repository.slyguy` | 0.0.9 | repozitář SlyGuy, z něj se instaluje HBO Max (viz níže) |
 
-Ke stažení jsou také `repository.sosacRepo`, `repository.prehraj.to` a `repository.slyguy` (HBO Max).
+Ke stažení jsou také `repository.sosacRepo` a `repository.prehraj.to`.
 
 **Adresa zdroje pro Kodi: `https://radcz.github.io/kodi-repo/`**
 
@@ -55,9 +56,19 @@ Další repozitáře (Dobbelina, Prehraj.to, SlyGuy) nainstalujete stejně, v kr
 
 Kodi si nové verze stahuje z tohoto repozitáře samo. Ručně: **Doplňky → Moje doplňky → Sosac.TV → Aktualizovat**.
 
+### HBO Max
+
+1. **Doplňky → Instalovat z repozitáře → radcz Repository → Repozitáře → SlyGuy Repository → Instalovat**.
+2. **Instalovat z repozitáře → SlyGuy Repository → Video doplňky → HBO Max → Instalovat**.
+
+- Je potřeba předplatné HBO Max; přihlásíte se přímo v doplňku.
+- Funguje na **Macu, Windows a Androidu** (ochranu Widevine Kodi doinstaluje přes InputStream Helper při prvním přehrání).
+- Na **Apple TV a iPadu** Kodi Widevine nejspíš nepodporuje, takže tam HBO Max asi nepůjde přehrát. Tam použijte oficiální aplikaci HBO Max.
+- HBO Max a jeho knihovny se aktualizují přímo od SlyGuy, ne z tohoto repozitáře.
+
 ---
 
-## Sosac.TV 3.1.2.4: co je nového a opraveno oproti 3.1.2
+## Sosac.TV 3.1.2.5: co je nového a opraveno oproti 3.1.2
 
 - **Apple TV a iPad:** stahuje se rovnou offline do Kodi. Kompatibilita s Kodi 19 (Python 3.8).
 - **Průběh stahování:** lišta s procenty, MB a rychlostí v rohu Kodi. Ve *Stažených* je přehled probíhajících a čekajících stahování a volba *Zrušit stahování*.

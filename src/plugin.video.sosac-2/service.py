@@ -27,7 +27,7 @@ DOMAIN = ["https://kodi-api.sosac.to/settings","https://tv.sosac.ph/settings.jso
 
 # Zdroje ve Správci souborů (Nastavení -> Správce souborů), aby se nemusely zadávat ručně.
 FILE_SOURCES = [
-    ("Radek repozitář", "https://radcz.github.io/kodi-repo/"),
+    ("radcz repozitář", "https://radcz.github.io/kodi-repo/"),
     ("https://kodi.sosac.to", "https://kodi.sosac.to/"),
     ("http://kodi.crocody.com/ - Prehraj.to", "http://kodi.crocody.com/"),
     ("https://dobbelina.github.io/", "https://dobbelina.github.io/"),

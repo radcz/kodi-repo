@@ -1382,8 +1382,8 @@ msgid "Surround"
 msgstr "Surround"
 
 msgctxt "#30414"
-msgid "Add-on sources (Radek, Sosac, Prehraj.to, HBO, dobbelina) were added to the File manager. Restart Kodi to use them."
-msgstr "Do Správce souborů byly přidány zdroje doplňků (Radek, Sosac, Prehraj.to, HBO, dobbelina). Projeví se po restartu Kodi."
+msgid "Add-on sources (radcz, Sosac, Prehraj.to, HBO, dobbelina) were added to the File manager. Restart Kodi to use them."
+msgstr "Do Správce souborů byly přidány zdroje doplňků (radcz, Sosac, Prehraj.to, HBO, dobbelina). Projeví se po restartu Kodi."
 
 msgctxt "#30415"
 msgid "Offline in Kodi (also for iPad)"

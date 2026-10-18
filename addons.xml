@@ -20,7 +20,7 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.4" provider-name="zak">
+<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.5" provider-name="zak">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
 		<import addon="script.module.six" version="1.11.0"/>
@@ -46,6 +46,8 @@
 			<fanart>fanart.png</fanart>
         </assets>
         <news>
+3.1.2.5
+- Zdroj repozitáře se jmenuje radcz
 3.1.2.4
 - Apple TV a iPad: stahuje se rovnou offline do Kodi (bez dotazu na složku v počítači)
 - Kompatibilita s Kodi 19 (Python 3.8)
@@ -149,5 +151,27 @@ Kodi is a registered trademark of the XBMC Foundation. We are not connected to o
 <forum>https://github.com/dobbelina/repository.dobbelina/issues</forum>
         <platform>all</platform>
     </extension>
+</addon>
+
+<addon id="repository.slyguy" name="SlyGuy Repository" provider-name="SlyGuy" version="0.0.9">
+  <extension point="xbmc.addon.repository" name="SlyGuy Repository">
+    <dir>
+      <info compressed="false">https://slyguy.uk/.repo/repository.slyguy/addons.xml</info>
+      <checksum>https://slyguy.uk/.repo/repository.slyguy/addons.xml.md5</checksum>
+      <datadir zip="true">https://slyguy.uk/.repo/repository.slyguy/</datadir>
+    </dir>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <description lang="en">Addons by SlyGuy (slyguy.uk)</description>
+    <license></license>
+    <language></language>
+    <website></website>
+    <news></news>
+    <assets>
+      <icon>icon.png</icon>
+      <fanart>fanart.jpg</fanart>
+    </assets>
+  </extension>
 </addon>
 </addons>
