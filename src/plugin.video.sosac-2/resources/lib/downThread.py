@@ -27,6 +27,10 @@ STALE_SECONDS = 600   # záznam bez aktualizace déle než 10 min = přerušené
 class DownloadCancelled(Exception) :
     pass
 
+class DownloadSkipped(Exception) :
+    # video nesplňuje požadovanou kvalitu (např. není ve 4K)
+    pass
+
 def _read_progress() :
     try :
         with open(PROGRESS_FILE, "r", encoding="utf-8") as f :
@@ -209,6 +213,7 @@ def run_queue(items) :
     def worker() :
         total = len(items)
         done = 0
+        skipped = 0
         monitor = xbmc.Monitor()
         for n, it in enumerate(items, 1) :
             if monitor.abortRequested() :
@@ -230,11 +235,18 @@ def run_queue(items) :
                             it["subs"]()
                         except Exception as e :
                             debug("run_queue subs error %s"%e, 2)
+            except DownloadSkipped :
+                skipped += 1
+                progress_remove(it["dest"])
+                notify(title, translate(30451), time=3000)
             except Exception as e :
                 debug("run_queue item error %s %s"%(title, e), 2)
                 progress_remove(it["dest"])
                 notify(title, translate(30079), time=3000)
-        notify(translate(30402), tr(30419, done, total), time=8000)
+        summary = tr(30419, done, total)
+        if skipped :
+            summary += ", " + tr(30453, skipped)
+        notify(translate(30402), summary, time=8000)
 
     if not items :
         return None

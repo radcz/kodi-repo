@@ -58,3 +58,7 @@ msgstr ""
 msgctxt "#30023"
 msgid "Download quality (maximum)"
 msgstr ""
+
+msgctxt "#30016"
+msgid "Exactly 1080p only (skip others)"
+msgstr ""

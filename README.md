@@ -5,7 +5,7 @@ Veřejný repozitář doplňků pro [Kodi](https://kodi.tv) 19, 20 a 21. Funguje
 | Doplněk | Verze | Popis |
 |---|---|---|
 | `repository.radek` | 1.0.3 | tento repozitář, přes který se doplňky instalují a aktualizují |
-| `plugin.video.sosac-2` | 3.1.2.5 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
+| `plugin.video.sosac-2` | 3.1.2.6 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
 | `plugin.video.prehrajto` | 2.0.5.1 | Prehraj.to česky: hledání s náhledy, stahování na pozadí, výběr více videí (vyžaduje Premium) |
 | `plugin.video.freevideo` | 1.5.0 | Video FREE: 14 webů (FreeVideo.cz, YourLesbians, Lesbian8, xHamster, Pornhub, PornTrex, xVideos, XNXX, Eporner, YouPorn, RedTube, Tube8, YouJizz, PornOne), lesbické výpisy vždy nahoře, přehrávání i stahování |
 | `repository.dobbelina` | 1.0.4.1 | repozitář Dobbelina (Cumination) s vlastní ikonou |
@@ -68,9 +68,10 @@ Kodi si nové verze stahuje z tohoto repozitáře samo. Ručně: **Doplňky → 
 
 ---
 
-## Sosac.TV 3.1.2.5: co je nového a opraveno oproti 3.1.2
+## Sosac.TV 3.1.2.6: co je nového a opraveno oproti 3.1.2
 
 - **Apple TV a iPad:** stahuje se rovnou offline do Kodi. Kompatibilita s Kodi 19 (Python 3.8).
+- **Kvalita stahování:** *Jen 4K* (výchozí; videa bez 4K se přeskočí), *4K, jinak nejlepší dostupná* nebo *Vybrat ručně*. Sosac nabízí 4K, 1080p, 720p a 480p, kvalita 1440p tam není.
 - **Průběh stahování:** lišta s procenty, MB a rychlostí v rohu Kodi. Ve *Stažených* je přehled probíhajících a čekajících stahování a volba *Zrušit stahování*.
 - **Stahování:** *Offline v Kodi* nebo *složka v počítači*, *Stáhnout vše na této stránce*, *Stáhnout vybrané…*, fronta po jednom.
 - **Mazání stažených:** *Smazat vybrané…*, *Smazat vše v této složce*, *Smazat celou složku*, *Smazat všechno stažené*.

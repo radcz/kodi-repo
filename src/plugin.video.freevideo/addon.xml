@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.freevideo" name="Video FREE" version="1.5.0" provider-name="radcz">
+<addon id="plugin.video.freevideo" name="Video FREE" version="1.6.0" provider-name="radcz">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
         <import addon="script.module.requests" version="2.22.0"/>
@@ -17,7 +17,8 @@
         <platform>all</platform>
         <license>GPL-3.0-or-later</license>
         <source>https://github.com/radcz/kodi-repo</source>
-        <news>1.5.0 - nové weby Lesbian8 (čistě lesbický), PornTrex (až 1080p), YouJizz, PornOne
+        <news>1.6.0 - Stáhnout celou stránku; stahování jen přesně v 1080p (jiné se přeskočí, výchozí, lze změnit v nastavení)
+1.5.0 - nové weby Lesbian8 (čistě lesbický), PornTrex (až 1080p), YouJizz, PornOne
 1.4.0 - lesbické výpisy a kategorie vždy nahoře, Lesbičky – všechny weby, Hledat jen lesbické; nové weby YourLesbians, YouPorn, RedTube, Tube8
 1.3.1 - autor radcz
 1.3.0 - nové weby: xVideos, XNXX, xHamster, Pornhub, Eporner; stahování HLS

@@ -21,6 +21,10 @@ PROP_RUNNING = 'plugin.video.prehrajto.dl_running'
 PROP_CANCEL = 'plugin.video.prehrajto.dl_cancel'
 
 
+class SkipVideo(Exception):
+    """Video nesplňuje požadovanou kvalitu - přeskočí se (není to chyba)."""
+
+
 class Downloader:
     """resolver(item) -> {'url', 'headers', 'cookies', 'ext', 'subtitle'}"""
 
@@ -82,19 +86,22 @@ class Downloader:
         monitor = xbmc.Monitor()
         progress = xbmcgui.DialogProgressBG()
         progress.create('Prehraj.to', 'Připravuji stahování...')
-        done = failed = 0
+        done = failed = skipped = 0
         try:
             while not monitor.abortRequested() and WINDOW.getProperty(PROP_CANCEL) != '1':
                 queue = self._load()
                 if not queue:
                     break
                 item = queue[0]
-                heading = 'Stahuji %d/%d' % (done + failed + 1, done + failed + len(queue))
+                heading = 'Stahuji %d/%d' % (done + failed + skipped + 1, done + failed + skipped + len(queue))
                 try:
                     if self._download(item, progress, heading, monitor):
                         done += 1
                     else:
                         failed += 1
+                except SkipVideo as exc:
+                    skipped += 1
+                    self.log('Přeskakuji %s: %s' % (item.get('url'), exc))
                 except Exception as exc:  # chyba jednoho videa nesmí zastavit frontu
                     failed += 1
                     self.log('Stahování selhalo (%s): %s' % (item.get('url'), exc), xbmc.LOGWARNING)
@@ -107,8 +114,10 @@ class Downloader:
             WINDOW.clearProperty(PROP_CANCEL)
         if cancelled:
             self.notify('Stahování zrušeno. Staženo: %d' % done)
-        elif done or failed:
-            self.notify('Stahování dokončeno: %d OK%s' % (done, ', %d chyb' % failed if failed else ''))
+        elif done or failed or skipped:
+            self.notify('Stahování dokončeno: %d OK%s%s' % (
+                done, ', %d chyb' % failed if failed else '',
+                ', %d přeskočeno (menší než 2K)' % skipped if skipped else ''))
 
     def _cancelled(self, monitor):
         return monitor.abortRequested() or WINDOW.getProperty(PROP_CANCEL) == '1'
@@ -122,7 +131,7 @@ class Downloader:
         if not src or not src.get('url'):
             raise IOError('nenalezen odkaz ke stažení')
         title = item.get('title') or 'video'
-        base = safe_filename(title)
+        base = safe_filename(title) + (' [%s]' % src['label'] if src.get('label') else '')
         target = join_path(folder, base + '.' + (src.get('ext') or 'mp4'))
         if xbmcvfs.exists(target):
             self.log('Už staženo: %s' % target)

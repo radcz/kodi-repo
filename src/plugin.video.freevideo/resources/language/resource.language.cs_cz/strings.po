@@ -58,3 +58,7 @@ msgstr "Kam se ukládají stažená videa. Když je prázdná, doplněk se zept�
 msgctxt "#30023"
 msgid "Download quality (maximum)"
 msgstr "Kvalita stahování (maximální)"
+
+msgctxt "#30016"
+msgid "Exactly 1080p only (skip others)"
+msgstr "Jen přesně 1080p (jiné přeskočit)"

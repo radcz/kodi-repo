@@ -1508,3 +1508,35 @@ msgstr ""
 msgctxt "#30445"
 msgid "Downloading – click to refresh"
 msgstr ""
+
+msgctxt "#30446"
+msgid "Download quality"
+msgstr ""
+
+msgctxt "#30447"
+msgid "Sosac offers 4K (UHD), 1080p, 720p and 480p, there is no 1440p. 'Only 4K' skips videos without 4K."
+msgstr ""
+
+msgctxt "#30448"
+msgid "Choose manually"
+msgstr ""
+
+msgctxt "#30449"
+msgid "Only 4K, otherwise skip"
+msgstr ""
+
+msgctxt "#30450"
+msgid "4K, otherwise best available"
+msgstr ""
+
+msgctxt "#30451"
+msgid "Not available in 4K, skipped"
+msgstr ""
+
+msgctxt "#30452"
+msgid "This video is not available in 4K. Download it in the best available quality?"
+msgstr ""
+
+msgctxt "#30453"
+msgid "Skipped (no 4K): %s"
+msgstr ""

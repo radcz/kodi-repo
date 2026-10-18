@@ -19,6 +19,10 @@ PROP_RUNNING = 'plugin.video.freevideo.dl_running'
 PROP_CANCEL = 'plugin.video.freevideo.dl_cancel'
 
 
+class SkipVideo(Exception):
+    """Video nesplňuje požadovanou kvalitu - přeskočí se (není to chyba)."""
+
+
 class Downloader:
     def __init__(self, addon, profile, log, notify):
         self.addon = addon
@@ -59,12 +63,28 @@ class Downloader:
         except OSError as exc:
             self.log('Nelze uložit %s: %s' % ('download.json', exc), xbmc.LOGWARNING)
 
+    EXACT_1080 = 5  # volba „Jen přesně 1080p (jiné přeskočit)“
+
+    def quality_mode(self):
+        try:
+            return int(self.addon.getSetting('download_quality') or self.EXACT_1080)
+        except ValueError:
+            return self.EXACT_1080
+
     def max_height(self):
         values = [0, 2160, 1080, 720, 540]
-        try:
-            return values[int(self.addon.getSetting('download_quality') or 2)]
-        except (ValueError, IndexError):
-            return 1080
+        mode = self.quality_mode()
+        return values[mode] if 0 <= mode < len(values) else 1080
+
+    def choose_stream(self, streams):
+        """Stream ke stažení; v režimu „jen 1080p“ vyhodí SkipVideo, když video 1080p nemá."""
+        if self.quality_mode() == self.EXACT_1080:
+            full_hd = [s for s in streams if 1000 <= s['height'] <= 1100]
+            if not full_hd:
+                have = ', '.join('%dp' % s['height'] for s in streams if s['height']) or 'neznámá'
+                raise SkipVideo('není v 1080p (má %s)' % have)
+            return full_hd[0]
+        return common.pick_stream(streams, self.max_height())
 
     # --- fronta ---
 
@@ -109,20 +129,23 @@ class Downloader:
         monitor = xbmc.Monitor()
         progress = xbmcgui.DialogProgressBG()
         progress.create('Video FREE', 'Připravuji stahování...')
-        done = failed = 0
+        done = failed = skipped = 0
         try:
             while not monitor.abortRequested() and WINDOW.getProperty(PROP_CANCEL) != '1':
                 queue = self._load()
                 if not queue:
                     break
                 item = queue[0]
-                total = done + failed + len(queue)
-                heading = 'Stahuji %d/%d' % (done + failed + 1, total)
+                total = done + failed + skipped + len(queue)
+                heading = 'Stahuji %d/%d' % (done + failed + skipped + 1, total)
                 try:
                     if self._download(item, progress, heading, monitor):
                         done += 1
                     else:
                         failed += 1
+                except SkipVideo as exc:
+                    skipped += 1
+                    self.log('Přeskakuji %s: %s' % (item.get('url'), exc))
                 except Exception as exc:  # chyba jednoho videa nesmí zastavit frontu
                     failed += 1
                     self.log('Stahování selhalo (%s): %s' % (item.get('url'), exc), xbmc.LOGWARNING)
@@ -135,9 +158,10 @@ class Downloader:
             WINDOW.clearProperty(PROP_CANCEL)
         if cancelled:
             self.notify('Stahování zrušeno. Staženo: %d' % done, xbmcgui.NOTIFICATION_INFO)
-        elif done or failed:
-            self.notify('Stahování dokončeno: %d OK%s' % (done, ', %d chyb' % failed if failed else ''),
-                        xbmcgui.NOTIFICATION_INFO)
+        elif done or failed or skipped:
+            self.notify('Stahování dokončeno: %d OK%s%s' % (
+                done, ', %d chyb' % failed if failed else '',
+                ', %d přeskočeno (není 1080p)' % skipped if skipped else ''), xbmcgui.NOTIFICATION_INFO)
 
     def _cancelled(self, monitor):
         return monitor.abortRequested() or WINDOW.getProperty(PROP_CANCEL) == '1'
@@ -148,9 +172,9 @@ class Downloader:
             raise IOError('Není nastavena složka pro stahování')
         site = sites.get(item.get('site'))
         streams, info = site.get_streams(item['url'])
-        stream = common.pick_stream(streams, self.max_height())
-        if not stream:
+        if not streams:
             raise IOError('video nemá stream')
+        stream = self.choose_stream(streams)
         title = item.get('title') or info.get('title') or 'video'
         hls = stream['type'] == 'hls'
         playlist = None

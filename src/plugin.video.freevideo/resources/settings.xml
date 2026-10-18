@@ -33,7 +33,7 @@
                 </setting>
                 <setting id="download_quality" type="integer" label="30023">
                     <level>0</level>
-                    <default>2</default>
+                    <default>5</default>
                     <constraints>
                         <options>
                             <option label="30010">0</option>
@@ -41,6 +41,7 @@
                             <option label="30012">2</option>
                             <option label="30013">3</option>
                             <option label="30014">4</option>
+                            <option label="30016">5</option>
                         </options>
                     </constraints>
                     <control type="spinner" format="string"/>

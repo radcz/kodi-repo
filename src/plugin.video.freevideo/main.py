@@ -130,7 +130,9 @@ def list_videos(site, url, page_no=1):
     if not videos:
         notify('Nic nenalezeno.', xbmcgui.NOTIFICATION_INFO)
     multi_q = {'action': 'download_multi', 'site': site.ID, 'url': url}
+    page_q = {'action': 'download_page', 'site': site.ID, 'url': url}
     if videos:
+        add_action('[COLOR deepskyblue]Stáhnout celou stránku (%d videí)[/COLOR]' % len(videos), page_q)
         add_action('[COLOR deepskyblue]Stáhnout více videí z této stránky...[/COLOR]', multi_q)
     for v in videos:
         label = v['title']
@@ -152,6 +154,7 @@ def list_videos(site, url, page_no=1):
             ('Stáhnout', 'RunPlugin(%s)' % build_url(action='download', site=site.ID, url=v['url'],
                                                      title=v['title'])),
             ('Stáhnout více z této stránky...', 'RunPlugin(%s)' % build_url(**multi_q)),
+            ('Stáhnout celou stránku', 'RunPlugin(%s)' % build_url(**page_q)),
         ])
         xbmcplugin.addDirectoryItem(HANDLE, build_url(action='play', site=site.ID, url=v['url']), li,
                                     isFolder=False)
@@ -234,6 +237,24 @@ def history_delete(query):
 
 
 # --- stahování ---
+
+def download_page(site, url):
+    """Všechna videa ze stránky do fronty stahování (po jednom potvrzení)."""
+    try:
+        videos, _, _ = site.get_videos(url)
+    except common.ScraperError as exc:
+        notify(str(exc))
+        return
+    if not videos:
+        notify('Na stránce nejsou žádná videa.', xbmcgui.NOTIFICATION_INFO)
+        return
+    rule = ''
+    if downloader().quality_mode() == Downloader.EXACT_1080:
+        rule = '\nStahují se jen videa v 1080p, ostatní se přeskočí.'
+    if not xbmcgui.Dialog().yesno(ADDON_NAME, 'Stáhnout všech %d videí z této stránky?%s' % (len(videos), rule)):
+        return
+    downloader().enqueue([{'site': site.ID, 'url': v['url'], 'title': v['title']} for v in videos])
+
 
 def download_multi(site, url):
     try:
@@ -330,6 +351,8 @@ def router(paramstring):
         downloader().enqueue([{'site': site.ID, 'url': params['url'], 'title': params.get('title', '')}])
     elif action == 'download_multi':
         download_multi(site, params['url'])
+    elif action == 'download_page':
+        download_page(site, params['url'])
     elif action == 'download_cancel':
         downloader().cancel()
     elif action == 'play':

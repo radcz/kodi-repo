@@ -3,6 +3,7 @@
     <category label="Nastavení">
         <setting label="Minimální počet videí na stránce výsledků" type="number" id="ls" default="50"/>
         <setting label="Složka pro stahování" type="folder" id="download" default=""/>
+        <setting label="Stahovat jen 4K / 2K (menší videa přeskočit)" type="bool" id="download_min_2k" default="true"/>
         <setting label="Složka pro knihovnu" type="folder" id="library" default=""/>
     </category>
     <category label="Premium účet">

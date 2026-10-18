@@ -24,7 +24,7 @@ import hashlib
 import hjson
 import xbmcvfs
 
-from resources.lib.downloader import Downloader
+from resources.lib.downloader import Downloader, SkipVideo
 
 
 _url = sys.argv[0]
@@ -605,19 +605,44 @@ def play_video_premium(link, cookies):
 # Stahování (fronta na pozadí)
 # ---------------------------------------------------------------------------
 
+def video_resolution(html_text):
+    """Rozlišení původního souboru ze stránky videa: (šířka, výška) nebo (0, 0)."""
+    if isinstance(html_text, bytes):
+        html_text = html_text.decode('utf-8', errors='replace')
+    m = re.search(r'Rozlišení:\s*</span>\s*<span>\s*(\d+)\s*x\s*(\d+)', html_text)
+    if m:
+        return int(m.group(1)), int(m.group(2))
+    w = re.search(r'itemprop="width" content="(\d+)"', html_text)
+    h = re.search(r'itemprop="height" content="(\d+)"', html_text)
+    return (int(w.group(1)) if w else 0), (int(h.group(1)) if h else 0)
+
+
+def resolution_label(w, h):
+    if w >= 3800 or h >= 2100:
+        return '4K'
+    if w >= 2560 or h >= 1440:
+        return '2K'
+    return ''
+
+
 def resolve_download(item):
     """Pro frontu stahování: najde přímý odkaz na soubor a titulky."""
     is_premium, cookies = ensure_premium(quiet=True)
     if not is_premium:
         raise IOError('vyžaduje Premium účet')
     page = BASE_URL + urlparse(item['url']).path
-    file, sub = get_link(safe_request_get(page, cookies=cookies).content)
+    content = safe_request_get(page, cookies=cookies).content
+    w, h = video_resolution(content)
+    label = resolution_label(w, h)
+    if addon.getSetting('download_min_2k') != 'false' and not label:
+        raise SkipVideo('rozlišení %s není 2K/4K' % ('%dx%d' % (w, h) if w or h else 'neznámé'))
+    file, sub = get_link(content)
     file = premium_file_url(page, cookies, file)
     path = urlparse(file).path
     ext = path.rsplit('.', 1)[-1].lower() if '.' in path.rsplit('/', 1)[-1] else 'mp4'
     if not re.fullmatch(r'[a-z0-9]{2,4}', ext):
         ext = 'mp4'
-    return {'url': file, 'headers': HEADERS, 'cookies': cookies, 'ext': ext, 'subtitle': sub}
+    return {'url': file, 'headers': HEADERS, 'cookies': cookies, 'ext': ext, 'subtitle': sub, 'label': label}
 
 
 def downloader():
@@ -627,6 +652,27 @@ def downloader():
 def title_from_url(url):
     part = urlparse(url).path.strip('/').split('/')[0]
     return part.replace('-', ' ') or 'video'
+
+
+def download_page(page_url):
+    """Všechna videa ze stránky výsledků do fronty (po jednom potvrzení)."""
+    cookies = None
+    if addon.getSetting('email'):
+        premium, cookies = get_premium(quiet=True)
+        cookies = cookies if premium else None
+    try:
+        videos, _ = fetch_search_page(page_url, cookies)
+    except Exception as e:
+        log('Stažení celé stránky selhalo: {}'.format(e), xbmc.LOGWARNING)
+        videos = []
+    if not videos:
+        notify('Na stránce nejsou žádná videa')
+        return
+    rule = '\nStahují se jen videa ve 4K nebo 2K, menší se přeskočí.' \
+        if addon.getSetting('download_min_2k') != 'false' else ''
+    if not xbmcgui.Dialog().yesno('Prehraj.to', 'Stáhnout všech {} videí z této stránky?{}'.format(len(videos), rule)):
+        return
+    downloader().enqueue([{'url': v['url'], 'title': v['title']} for v in videos])
 
 
 def download_multi(page_url):
@@ -776,6 +822,9 @@ def search(name, page_url=None, page_no=1):
     if not videos:
         notify('Nic nenalezeno')
     else:
+        li = xbmcgui.ListItem('[COLOR deepskyblue]Stáhnout celou stránku ({} videí)[/COLOR]'.format(len(videos)))
+        li.setArt({'icon': ICON, 'thumb': ICON})
+        xbmcplugin.addDirectoryItem(_handle, get_url(action='download_page', url=first_page), li, False)
         li = xbmcgui.ListItem('[COLOR deepskyblue]Stáhnout více videí z této stránky...[/COLOR]')
         li.setArt({'icon': ICON, 'thumb': ICON})
         xbmcplugin.addDirectoryItem(_handle, get_url(action='download_multi', url=first_page), li, False)
@@ -789,6 +838,7 @@ def search(name, page_url=None, page_no=1):
         list_item.addContextMenuItems([
             ('Stáhnout', 'RunPlugin({})'.format(get_url(action='download', url=v['url'], title=v['title']))),
             ('Stáhnout více z této stránky...', 'RunPlugin({})'.format(get_url(action='download_multi', url=first_page))),
+            ('Stáhnout celou stránku', 'RunPlugin({})'.format(get_url(action='download_page', url=first_page))),
             ('Uložit do knihovny', 'RunPlugin({})'.format(get_url(action='library', url=v['url']))),
             ('QR kód streamu', 'RunPlugin({})'.format(get_url(action='qr', url=v['url']))),
         ])
@@ -1115,6 +1165,8 @@ def router(paramstring):
         downloader().enqueue([{'url': params['url'], 'title': params.get('title') or title_from_url(params['url'])}])
     elif action == 'download_multi':
         download_multi(params['url'])
+    elif action == 'download_page':
+        download_page(params['url'])
     elif action == 'download_cancel':
         downloader().cancel()
     else:

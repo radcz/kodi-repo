@@ -272,14 +272,52 @@ def pick_link(urls, key1, key2) :
                 return lk, q
     return None, None
 
+UHD_KEYS = ["UHD", "UHD HDR"]   # 4K bez HDR má přednost (lépe hraje na obrazovkách bez HDR)
+SKIPPED = []                     # přeskočené díly při hromadném stahování seriálu
+
+def quality_mode() :
+    # 0 = ruční výběr, 1 = jen 4K jinak přeskočit, 2 = 4K jinak nejlepší dostupná
+    return addon.getSetting("download-quality") or "1"
+
+def pref_langs(urls, key1=None) :
+    # jazyky v pořadí: vybraný, první a druhý preferovaný dabing; ostatní jen když žádný z nich není
+    order = []
+    for k in (key1, str(first_dubbing).upper(), str(second_dubbing).upper()) :
+        if k and k in urls and k not in order :
+            order.append(k)
+    return order or [k for k in urls if isinstance(urls.get(k), dict)]
+
+def auto_stream(urls, key1=None, best_fallback=None) :
+    langs = pref_langs(urls, key1)
+    for lk in langs :
+        for q in UHD_KEYS :
+            if urls[lk].get(q) :
+                return lk, q
+    if best_fallback is None :
+        best_fallback = quality_mode() == "2"
+    if best_fallback :
+        for lk in langs :
+            for q in qual_list :
+                if urls[lk].get(q) :
+                    return lk, q
+    return None, None
+
+def stream_for(urls, key1, key2) :
+    # jazyk a kvalita konkrétního videa podle nastavení "Kvalita stahování"
+    if quality_mode() == "0" :
+        return pick_link(urls, key1, key2)
+    return auto_stream(urls, key1)
+
 def make_resolver(link_id, key1, key2, sub_dest=None, with_subs=False) :
     # Odkaz na stream se zjistí až těsně před stažením (odkazy po čase vyprší).
     state = {}
     def resolve() :
         data = json.loads(get_url(set_streamujtv_info(link_id)))
         urls = data.get("URL") or {}
-        k1, k2 = pick_link(urls, key1, key2)
+        k1, k2 = stream_for(urls, key1, key2)
         if not k1 :
+            if quality_mode() == "1" :
+                raise DownloadSkipped()
             return None
         state["urls"], state["k1"] = urls, k1
         return get_url(urls[k1][k2])
@@ -2677,7 +2715,11 @@ def downsais(sais_id,title,sdsais_list):
         data = json.loads(source)
         get_links_mess(data)
 
-        link = data['URL'][key1][key2]            
+        k1, k2 = stream_for(data.get('URL') or {}, key1, key2)
+        if not k1 :
+            SKIPPED.append(item)
+            continue
+        link = data['URL'][k1][k2]
         link_url = get_url(link)
         fileId = str(item) + "-" + str(int(time.time()))
         filename = fileId + ".mp4"
@@ -2747,7 +2789,7 @@ def downserial(sais_id):
             for item in data[x] :
                 try :
                     link_id = data[x][item]['l']
-                    selectL = selectQual2("serials",link_id)
+                    selectL = selectQual2("serials",link_id) if quality_mode() == "0" else None
                     if selectL :
                         selectB = False
                         for x1, x2, x3 in selectL :
@@ -2765,7 +2807,11 @@ def downserial(sais_id):
                     data1 = json.loads(source)
                     get_links_mess(data1)
 
-                    link = data1['URL'][key1][key2]            
+                    k1, k2 = stream_for(data1.get('URL') or {}, key1, key2)
+                    if not k1 :
+                        SKIPPED.append(link_id)
+                        continue
+                    link = data1['URL'][k1][k2]
                     link_url = get_url(link)
                     epis_id = data[x][item]['_id']
                     fileId = str(epis_id) + "-" + str(int(time.time()))
@@ -2834,7 +2880,7 @@ def downserialcom(sais_id):
             for item in data[x] :
                 try :
                     link_id = data[x][item]['l']
-                    selectL = selectQual2("serials",link_id)
+                    selectL = selectQual2("serials",link_id) if quality_mode() == "0" else None
                     if selectL :
                         selectB = False
                         for x1 ,x2,x3 in selectL :
@@ -2852,7 +2898,11 @@ def downserialcom(sais_id):
                     data1 = json.loads(source)
                     get_links_mess(data1)
 
-                    link = data1['URL'][key1][key2]            
+                    k1, k2 = stream_for(data1.get('URL') or {}, key1, key2)
+                    if not k1 :
+                        SKIPPED.append(link_id)
+                        continue
+                    link = data1['URL'][k1][k2]
                     link_url = get_url(link)
                     epis_id = data[x][item]['_id']
                     filename = str(epis_id) + "-" + str(int(time.time())) + ".mp4"
@@ -2895,7 +2945,7 @@ def prepa_list(s_id, data, sais_n, id_list, dir_name, ex_list) :
         if data[sais_n][item]['_id'] not in id_list : continue 
         try :
             link_id = data[sais_n][item]['l']
-            selectL = selectQual2("serials",link_id)
+            selectL = selectQual2("serials",link_id) if quality_mode() == "0" else None
             debug("prepalist  selectL %s"%selectL, 2)
             if selectL :                
                 selectB = False
@@ -2909,14 +2959,18 @@ def prepa_list(s_id, data, sais_n, id_list, dir_name, ex_list) :
                     if sel is None : continue
                     key1 , key2, key3  = sel
                     debug("prepalist  not selectL key1 %s %s"%(key1,key2), 2)
-            else : continue
+            elif quality_mode() == "0" : continue
                     
             url = set_streamujtv_info(link_id)
             source = get_url(url)
             data1 = json.loads(source)
             get_links_mess(data1)
 
-            link = data1['URL'][key1][key2]            
+            k1, k2 = stream_for(data1.get('URL') or {}, key1, key2)
+            if not k1 :
+                SKIPPED.append(link_id)
+                continue
+            link = data1['URL'][k1][k2]
             link_url = get_url(link)
             epis_id = data[sais_n][item]['_id']
             fileId = str(epis_id) + "-" + str(int(time.time()))
@@ -3122,6 +3176,17 @@ def save_downlist(sais_list) :
 def selectQual(mov_ser,m_id,link_id) :
     debug("selectQual selectQual ", 2)
     addon.setSetting('get_links',"true")
+    if quality_mode() != "0" and mov_ser in ("serials", "movies") :
+        # automaticky: jazyk podle preferencí, kvalita 4K (každé video se vybírá zvlášť)
+        data = json.loads(get_url(set_streamujtv_info(link_id)))
+        get_links_mess(data)
+        urls = data.get("URL") or {}
+        langs = pref_langs(urls)
+        if not langs :
+            dialog.ok("info",translate(30075))
+            return None
+        lang = auto_stream(urls)[0] or langs[0]
+        return (lang, "UHD", "with sub" if "subtitles" in urls.get(lang, {}) else "")
     if mov_ser == "serials" or mov_ser == "movies" :
         url = set_streamujtv_info(link_id)
         source = get_url(url)
@@ -3276,9 +3341,17 @@ def downloadPlug(mov_ser,m_id,link_id):
 
         suivi_list.extend(info_list)
         if len(suivi_list) == 0 : return                                               
-        try :
-                answ = dialog.select(translate(30074), [i[2] for i in suivi_list])
-        except : return
+        if quality_mode() != "0" :
+            k1, k2 = auto_stream(data['URL'])
+            if not k1 :
+                if quality_mode() == "1" and not dialog.yesno(translate(30402), translate(30452)) :
+                    return
+                k1, k2 = auto_stream(data['URL'], best_fallback=True)
+            answ = next((n for n, x in enumerate(suivi_list) if x[0] == k1 and x[1] == k2), -1)
+        else :
+            try :
+                    answ = dialog.select(translate(30074), [i[2] for i in suivi_list])
+            except : return
         if answ >=0 :
             key1 , key2 , key3 = suivi_list[answ]
             if ask_root() is None : return
@@ -3726,6 +3799,9 @@ def upd_download(del_day) :
     if len(sais_list) != 0 : downloadSais(sais_list)
 
 def downloadSais(vid_list):
+    if SKIPPED :
+        notify(translate(30402), tr(30453, len(SKIPPED)), time=6000)
+        del SKIPPED[:]
     # dřív se spustila všechna stahování naráz a mezi nimi běžela 5s smyčka naprázdno
     items = [{"resolve": url, "dest": dest, "title": os.path.basename(os.path.dirname(dest)) + " " + os.path.basename(dest).split("-")[0]}
              for url, dest in vid_list]

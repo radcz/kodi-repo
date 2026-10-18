@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.5" provider-name="zak">
+<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.6" provider-name="zak">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
 		<import addon="script.module.six" version="1.11.0"/>
@@ -25,6 +25,9 @@
 			<fanart>fanart.png</fanart>
         </assets>
         <news>
+3.1.2.6
+- Kvalita stahování: Jen 4K (výchozí), 4K jinak nejlepší dostupná, nebo ručně
+- Videa bez 4K se při hromadném stahování přeskočí a na konci se ukáže jejich počet
 3.1.2.5
 - Zdroj repozitáře se jmenuje radcz
 3.1.2.4

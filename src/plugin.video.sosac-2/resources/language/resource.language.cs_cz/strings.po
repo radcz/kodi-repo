@@ -1508,3 +1508,35 @@ msgstr "Zrušit stahování"
 msgctxt "#30445"
 msgid "Downloading – click to refresh"
 msgstr "Probíhá stahování – kliknutím obnovíte"
+
+msgctxt "#30446"
+msgid "Download quality"
+msgstr "Kvalita stahování"
+
+msgctxt "#30447"
+msgid "Sosac offers 4K (UHD), 1080p, 720p and 480p, there is no 1440p. 'Only 4K' skips videos without 4K."
+msgstr "Sosac nabízí 4K (UHD), 1080p, 720p a 480p, kvalita 1440p tam není. „Jen 4K“ videa bez 4K přeskočí."
+
+msgctxt "#30448"
+msgid "Choose manually"
+msgstr "Vybrat ručně"
+
+msgctxt "#30449"
+msgid "Only 4K, otherwise skip"
+msgstr "Jen 4K, jinak přeskočit"
+
+msgctxt "#30450"
+msgid "4K, otherwise best available"
+msgstr "4K, jinak nejlepší dostupná"
+
+msgctxt "#30451"
+msgid "Not available in 4K, skipped"
+msgstr "Není ve 4K, přeskočeno"
+
+msgctxt "#30452"
+msgid "This video is not available in 4K. Download it in the best available quality?"
+msgstr "Video není ve 4K. Stáhnout ho v nejlepší dostupné kvalitě?"
+
+msgctxt "#30453"
+msgid "Skipped (no 4K): %s"
+msgstr "Přeskočeno (bez 4K): %s"

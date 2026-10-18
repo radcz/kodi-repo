@@ -20,7 +20,7 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.5" provider-name="zak">
+<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.6" provider-name="zak">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
 		<import addon="script.module.six" version="1.11.0"/>
@@ -46,6 +46,9 @@
 			<fanart>fanart.png</fanart>
         </assets>
         <news>
+3.1.2.6
+- Kvalita stahování: Jen 4K (výchozí), 4K jinak nejlepší dostupná, nebo ručně
+- Videa bez 4K se při hromadném stahování přeskočí a na konci se ukáže jejich počet
 3.1.2.5
 - Zdroj repozitáře se jmenuje radcz
 3.1.2.4
@@ -73,7 +76,7 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.freevideo" name="Video FREE" version="1.5.0" provider-name="radcz">
+<addon id="plugin.video.freevideo" name="Video FREE" version="1.6.0" provider-name="radcz">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
         <import addon="script.module.requests" version="2.22.0"/>
@@ -91,7 +94,8 @@
         <platform>all</platform>
         <license>GPL-3.0-or-later</license>
         <source>https://github.com/radcz/kodi-repo</source>
-        <news>1.5.0 - nové weby Lesbian8 (čistě lesbický), PornTrex (až 1080p), YouJizz, PornOne
+        <news>1.6.0 - Stáhnout celou stránku; stahování jen přesně v 1080p (jiné se přeskočí, výchozí, lze změnit v nastavení)
+1.5.0 - nové weby Lesbian8 (čistě lesbický), PornTrex (až 1080p), YouJizz, PornOne
 1.4.0 - lesbické výpisy a kategorie vždy nahoře, Lesbičky – všechny weby, Hledat jen lesbické; nové weby YourLesbians, YouPorn, RedTube, Tube8
 1.3.1 - autor radcz
 1.3.0 - nové weby: xVideos, XNXX, xHamster, Pornhub, Eporner; stahování HLS
@@ -105,7 +109,7 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.prehrajto" version="2.0.5.1" name="Prehraj.to - Kodi" provider-name="WrightDerby, česká úprava radcz">
+<addon id="plugin.video.prehrajto" version="2.0.5.2" name="Prehraj.to - Kodi" provider-name="WrightDerby, česká úprava radcz">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
         <import addon="script.module.requests" version="2.22.0"/>
@@ -119,7 +123,8 @@
         <summary lang="en_GB">Prehraj.to - movies and TV shows (Czech version)</summary>
         <description lang="cs_CZ">Hledání a přehrávání videí z prehraj.to, filmy a seriály podle TMDB, pokračování v přehrávání, stahování na pozadí (i více videí najednou) a ukládání do knihovny. Pro přehrávání je potřeba PREMIUM účet - údaje zadejte v nastavení doplňku. Registrace: https://shorturl.at/3kTcF</description>
         <description lang="en_GB">Search and play videos from prehraj.to, TMDB movies and TV shows, resume, background downloads and library export. A PREMIUM account is required for playback.</description>
-        <news>2.0.5.1 - česká verze, stahování na pozadí s frontou, výběr více videí ke stažení, náhledy a stránkování ve výsledcích, data v addon_data</news>
+        <news>2.0.5.2 - stahování jen ve 4K/2K (menší se přeskočí, lze vypnout v nastavení), Stáhnout celou stránku
+2.0.5.1 - česká verze, stahování na pozadí s frontou, výběr více videí ke stažení, náhledy a stránkování ve výsledcích, data v addon_data</news>
         <website>https://shorturl.at/3kTcF</website>
         <platform>all</platform>
         <assets>
