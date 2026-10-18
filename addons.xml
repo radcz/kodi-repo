@@ -73,7 +73,7 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.freevideo" name="Video FREE" version="1.4.0" provider-name="radcz">
+<addon id="plugin.video.freevideo" name="Video FREE" version="1.5.0" provider-name="radcz">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
         <import addon="script.module.requests" version="2.22.0"/>
@@ -82,16 +82,17 @@
         <provides>video</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="cs_CZ">Video FREE - 10 webů, lesbické výpisy vždy nahoře</summary>
-        <summary lang="en_GB">Video FREE - 10 sites, lesbian listings always on top</summary>
-        <description lang="cs_CZ">Video FREE - neoficiální doplněk pro FreeVideo.cz, YourLesbians, xHamster, Pornhub, xVideos, XNXX, Eporner, YouPorn, RedTube a Tube8. Lesbické výpisy a kategorie jsou vždy nahoře (Lesbičky – všechny weby), hledání jen lesbických videí, přehrávání a stahování (i více videí najednou). Části scraperů vycházejí z doplňku Cumination (GPL-3.0). Obsah pouze pro dospělé (18+).</description>
+        <summary lang="cs_CZ">Video FREE - 14 webů, lesbické výpisy vždy nahoře</summary>
+        <summary lang="en_GB">Video FREE - 14 sites, lesbian listings always on top</summary>
+        <description lang="cs_CZ">Video FREE - neoficiální doplněk pro FreeVideo.cz, YourLesbians, Lesbian8, xHamster, Pornhub, PornTrex, xVideos, XNXX, Eporner, YouPorn, RedTube, Tube8, YouJizz a PornOne. Lesbické výpisy a kategorie jsou vždy nahoře (Lesbičky – všechny weby), hledání jen lesbických videí, přehrávání a stahování (i více videí najednou). Části scraperů vycházejí z doplňku Cumination (GPL-3.0). Obsah pouze pro dospělé (18+).</description>
         <description lang="en_GB">Video FREE - unofficial add-on for FreeVideo.cz, xVideos, XNXX, xHamster, Pornhub and Eporner: browse, search, play and download. Parts of the scrapers are based on Cumination (GPL-3.0). Adults only (18+).</description>
         <disclaimer lang="cs_CZ">Doplněk neobsahuje ani nehostuje žádný obsah, pouze zobrazuje veřejně dostupné stránky freevideo.cz. Obsah 18+.</disclaimer>
         <language>cs</language>
         <platform>all</platform>
         <license>GPL-3.0-or-later</license>
         <source>https://github.com/radcz/kodi-repo</source>
-        <news>1.4.0 - lesbické výpisy a kategorie vždy nahoře, Lesbičky – všechny weby, Hledat jen lesbické; nové weby YourLesbians, YouPorn, RedTube, Tube8
+        <news>1.5.0 - nové weby Lesbian8 (čistě lesbický), PornTrex (až 1080p), YouJizz, PornOne
+1.4.0 - lesbické výpisy a kategorie vždy nahoře, Lesbičky – všechny weby, Hledat jen lesbické; nové weby YourLesbians, YouPorn, RedTube, Tube8
 1.3.1 - autor radcz
 1.3.0 - nové weby: xVideos, XNXX, xHamster, Pornhub, Eporner; stahování HLS
 1.2.0 - doplněk přejmenován na Video FREE

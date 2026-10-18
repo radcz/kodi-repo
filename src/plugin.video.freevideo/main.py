@@ -198,7 +198,7 @@ def save_history(items):
 
 
 def search_menu(site):
-    if site.LESBIAN_MENU and site.ID != 'yourlesbians':
+    if site.LESBIAN_MENU and site.ID not in ('yourlesbians', 'lesbian8'):
         add_dir(LES % '[B]Hledat jen lesbické na %s...[/B]' % site.NAME, {'action': 'search', 'site': site.ID, 'les': '1'})
     add_dir('[B]Nové hledání na %s...[/B]' % site.NAME, {'action': 'search', 'site': site.ID})
     for q in load_history():

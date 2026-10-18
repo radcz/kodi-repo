@@ -125,6 +125,19 @@ def clean(text):
     return html.unescape(re.sub(r'\s+', ' ', text)).strip()
 
 
+JUNK_TITLE = re.compile(r'^(add(\s|&nbsp;)*to|hd video|watch later|add to favou?rites?|favou?rites?|'
+                        r'remove|play|preview|video|thumb|playlist|like|dislike|report|share)\b', re.I)
+
+
+def pick_title(block):
+    """První title/alt v bloku, který není popisek tlačítka nebo ikony."""
+    for val in re.findall(r'\b(?:title|alt)="([^"]{3,})"', block):
+        val = clean(val)
+        if val and not JUNK_TITLE.match(val):
+            return val
+    return ''
+
+
 def duration_seconds(text):
     """'7:25', '1:02:03', '11 min', '45 sec', '1 h 5 min', '21min', 3735 -> sekundy."""
     if isinstance(text, (int, float)):
