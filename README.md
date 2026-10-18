@@ -4,7 +4,7 @@ Vlastní repozitář doplňků pro [Kodi](https://kodi.tv) (testováno na Kodi 2
 
 | Doplněk | Verze | Popis |
 |---|---|---|
-| `plugin.video.freevideo` | 1.1.0 | FreeVideo.cz: výpisy, kategorie, hledání, přehrávání |
+| `plugin.video.freevideo` | 1.2.0 | FreeVideo.cz: výpisy, kategorie, hledání, přehrávání |
 | `plugin.video.sosac-2` | 3.1.2.3 | Sosac.TV s opravami a stahováním (viz níže) |
 | `repository.radek` | 1.0.1 | samotný repozitář, díky kterému se doplňky aktualizují |
 
