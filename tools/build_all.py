@@ -5,7 +5,7 @@ Použití (z libovolné složky):
     python3 tools/build_all.py
 
 Výsledek přímo v kořeni repozitáře:
-  addons.xml, addons.xml.md5      - čte Kodi (Radek Repository)
+  addons.xml, addons.xml.md5      - čte Kodi (radcz Repository)
   <id doplňku>/<id>-<verze>.zip   - ZIPy pro aktualizace z repozitáře
   *.zip v kořeni + index.html     - instalace přes zdroj https://radcz.github.io/kodi-repo/
                                     (Apple TV, iPad i jiné Kodi bez počítače)
@@ -23,13 +23,14 @@ from xml.etree import ElementTree as ET
 REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 WORK = os.path.normpath(os.path.join(REPO, '..', '..'))          # ~/Desktop/KODI -SOSAČ
 URL = 'https://raw.githubusercontent.com/radcz/kodi-repo/main/'
-REPO_VERSION = '1.0.2'
+REPO_VERSION = '1.0.3'
 
-# doplňky v addons.xml (instalace a aktualizace přes Radek Repository)
+# doplňky v addons.xml (instalace a aktualizace přes radcz Repository)
 ADDONS = {
     'repository.radek': os.path.join(WORK, 'freevideo', 'src', 'repository.radek'),
     'plugin.video.sosac-2': os.path.join(WORK, 'plugin.video.sosac-2'),
     'plugin.video.freevideo': os.path.join(WORK, 'freevideo', 'src', 'plugin.video.freevideo'),
+    'plugin.video.prehrajto': os.path.join(WORK, 'prehrajto', 'src', 'plugin.video.prehrajto'),  # česká verze
     'repository.dobbelina': os.path.join(WORK, 'repozitare', 'repository.dobbelina'),
 }
 # jen ZIP ke stažení (aktualizují se ze svých vlastních zdrojů)
@@ -39,12 +40,14 @@ EXTRA = {
     'repository.slyguy': os.path.join(WORK, 'repozitare', 'repository.slyguy'),
 }
 SKIP_DIRS = {'__pycache__', '.git', 'tests', 'addon_data', 'userdata'}
-SKIP_FILES = {'.DS_Store', 'settings.xml.bak'}
+# session.json apod. ukládala původní verze Prehraj.to do složky doplňku (přihlášení!) - nikdy nebalit
+SKIP_FILES = {'.DS_Store', 'settings.xml.bak', 'session.json', 'history.txt', 'resume.json', 'subtitles.txt',
+              'update_check.txt', 'download_queue.json'}
 SKIP_EXT = ('.pyc', '.bak', '.tmp')
 
 REPO_ADDON_XML = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="repository.radek" name="[COLOR deepskyblue]Radek[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="{version}" provider-name="Radek">
-    <extension point="xbmc.addon.repository" name="Radek Repository">
+<addon id="repository.radek" name="[COLOR deepskyblue]radcz[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="{version}" provider-name="radcz">
+    <extension point="xbmc.addon.repository" name="radcz Repository">
         <dir>
             <info compressed="false">{url}addons.xml</info>
             <checksum>{url}addons.xml.md5</checksum>
@@ -52,10 +55,10 @@ REPO_ADDON_XML = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         </dir>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="cs_CZ">Vlastní repozitář doplňků (Sosac.TV, Video FREE, Dobbelina)</summary>
-        <summary lang="en_GB">Personal add-on repository</summary>
-        <description lang="cs_CZ">Opravený Sosac.TV, Video FREE a repozitář Dobbelina s aktualizacemi. Funguje na Macu, Windows, Androidu, Apple TV i iPadu.</description>
-        <description lang="en_GB">Patched Sosac.TV, Video FREE and the Dobbelina repository with updates. Works on macOS, Windows, Android, Apple TV and iPad.</description>
+        <summary lang="cs_CZ">Repozitář doplňků radcz (Sosac.TV, Prehraj.to česky, Video FREE, Dobbelina)</summary>
+        <summary lang="en_GB">radcz add-on repository</summary>
+        <description lang="cs_CZ">Opravený Sosac.TV, česká verze Prehraj.to, Video FREE a repozitář Dobbelina s aktualizacemi. Funguje na Macu, Windows, Androidu, Apple TV i iPadu.</description>
+        <description lang="en_GB">Patched Sosac.TV, Czech Prehraj.to, Video FREE and the Dobbelina repository with updates. Works on macOS, Windows, Android, Apple TV and iPad.</description>
         <platform>all</platform>
         <assets>
             <icon>icon.png</icon>
@@ -140,8 +143,8 @@ def main():
     order = first + sorted(x for x in flat if x not in first)
     links = '\n'.join('<a href="%s">%s</a><br>' % (n, n) for n in order)
     with open(os.path.join(REPO, 'index.html'), 'w', encoding='utf-8') as f:
-        f.write('<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>Radek Kodi repo</title></head>\n'
-                '<body>\n<h1>Radek Kodi repozitář</h1>\n<p>V Kodi přidejte zdroj https://radcz.github.io/kodi-repo/ '
+        f.write('<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>radcz Kodi repo</title></head>\n'
+                '<body>\n<h1>radcz Kodi repozitář</h1>\n<p>V Kodi přidejte zdroj https://radcz.github.io/kodi-repo/ '
                 'a nainstalujte ze ZIPu nejdřív repository.radek.</p>\n%s\n</body></html>\n' % links)
     open(os.path.join(REPO, '.nojekyll'), 'w').close()
     copy_sources()

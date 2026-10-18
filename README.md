@@ -1,12 +1,13 @@
-# Radek Kodi Repository
+# radcz Kodi Repository
 
 Veřejný repozitář doplňků pro [Kodi](https://kodi.tv) 19, 20 a 21. Funguje na **Apple TV, iPadu/iPhonu, Macu, Windows, Androidu i Linuxu**.
 
 | Doplněk | Verze | Popis |
 |---|---|---|
-| `repository.radek` | 1.0.2 | tento repozitář, přes který se doplňky instalují a aktualizují |
+| `repository.radek` | 1.0.3 | tento repozitář, přes který se doplňky instalují a aktualizují |
 | `plugin.video.sosac-2` | 3.1.2.4 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
-| `plugin.video.freevideo` | 1.3.0 | Video FREE: FreeVideo.cz, xVideos, XNXX, xHamster, Pornhub, Eporner (přehrávání i stahování) |
+| `plugin.video.prehrajto` | 2.0.5.1 | Prehraj.to česky: hledání s náhledy, stahování na pozadí, výběr více videí (vyžaduje Premium) |
+| `plugin.video.freevideo` | 1.3.1 | Video FREE: FreeVideo.cz, xVideos, XNXX, xHamster, Pornhub, Eporner (přehrávání i stahování) |
 | `repository.dobbelina` | 1.0.4.1 | repozitář Dobbelina (Cumination) s vlastní ikonou |
 
 Ke stažení jsou také `repository.sosacRepo`, `repository.prehraj.to` a `repository.slyguy` (HBO Max).
@@ -23,8 +24,8 @@ V repozitáři nejsou žádná hesla. Přihlašovací údaje k Sosacu a Streamuj
 2. **Nastavení → Správce souborů → Přidat zdroj → `<Žádný>`** → napsat
    `https://radcz.github.io/kodi-repo/` → **OK** → název zdroje `radek` → **OK**.
 3. **Doplňky → ikona otevřené krabice (vlevo nahoře) → Instalovat ze ZIP souboru → `radek`**
-   → **`repository.radek-1.0.2.zip`**. Počkejte na hlášku „Doplněk povolen“.
-4. **Instalovat z repozitáře → Radek Repository → Video doplňky** → **Sosac.TV** (a podle chuti **Video FREE**) → **Instalovat**.
+   → **`repository.radek-1.0.3.zip`**. Počkejte na hlášku „Doplněk povolen“.
+4. **Instalovat z repozitáře → radcz Repository → Video doplňky** → **Sosac.TV** (a podle chuti **Video FREE**) → **Instalovat**.
    Kodi samo doinstaluje potřebné knihovny (requests, six, routing) z oficiálního repozitáře Kodi.
 5. **Restartujte Kodi.** Sosac při prvním startu nainstaluje svůj vzhled a přidá do Správce souborů zdroje
    (radek, Sosac, Prehraj.to, dobbelina, SlyGuy).

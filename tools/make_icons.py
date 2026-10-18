@@ -129,7 +129,7 @@ def repo_icon():
     sparkle(d, 448, 78, 30, (255, 255, 255, 255))
     sparkle(d, 70, 450, 18, (255, 255, 255, 220))
     f2 = font(46)
-    t = 'repository.radek'
+    t = 'radcz repository'
     tw = d.textlength(t, font=f2)
     d.text(((S - tw) / 2, 446), t, font=f2, fill=(255, 255, 255, 255))
     return bg

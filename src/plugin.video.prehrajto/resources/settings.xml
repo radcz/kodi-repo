@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <category label="Nastavení">
+        <setting label="Minimální počet videí na stránce výsledků" type="number" id="ls" default="50"/>
+        <setting label="Složka pro stahování" type="folder" id="download" default=""/>
+        <setting label="Složka pro knihovnu" type="folder" id="library" default=""/>
+    </category>
+    <category label="Premium účet">
+        <setting label="E-mail" type="text" id="email" default=""/>
+        <setting label="Heslo" type="text" id="password" option="hidden" default=""/>
+        <setting type="lsep" label="Zadejte e-mail a heslo, potvrďte tlačítkem OK vpravo a pak ověřte přihlášení (Otestovat přihlášení)"/>
+        <setting label="Otestovat přihlášení" type="action" id="test_login" action="RunPlugin(plugin://plugin.video.prehrajto/?action=test_login)"/>
+    </category>
+</settings>

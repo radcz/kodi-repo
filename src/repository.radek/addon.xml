@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="repository.radek" name="[COLOR deepskyblue]Radek[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="1.0.2" provider-name="Radek">
-    <extension point="xbmc.addon.repository" name="Radek Repository">
+<addon id="repository.radek" name="[COLOR deepskyblue]radcz[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="1.0.3" provider-name="radcz">
+    <extension point="xbmc.addon.repository" name="radcz Repository">
         <dir>
             <info compressed="false">https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml</info>
             <checksum>https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml.md5</checksum>
@@ -8,10 +8,10 @@
         </dir>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="cs_CZ">Vlastní repozitář doplňků (Sosac.TV, Video FREE, Dobbelina)</summary>
-        <summary lang="en_GB">Personal add-on repository</summary>
-        <description lang="cs_CZ">Opravený Sosac.TV, Video FREE a repozitář Dobbelina s aktualizacemi. Funguje na Macu, Windows, Androidu, Apple TV i iPadu.</description>
-        <description lang="en_GB">Patched Sosac.TV, Video FREE and the Dobbelina repository with updates. Works on macOS, Windows, Android, Apple TV and iPad.</description>
+        <summary lang="cs_CZ">Repozitář doplňků radcz (Sosac.TV, Prehraj.to česky, Video FREE, Dobbelina)</summary>
+        <summary lang="en_GB">radcz add-on repository</summary>
+        <description lang="cs_CZ">Opravený Sosac.TV, česká verze Prehraj.to, Video FREE a repozitář Dobbelina s aktualizacemi. Funguje na Macu, Windows, Androidu, Apple TV i iPadu.</description>
+        <description lang="en_GB">Patched Sosac.TV, Czech Prehraj.to, Video FREE and the Dobbelina repository with updates. Works on macOS, Windows, Android, Apple TV and iPad.</description>
         <platform>all</platform>
         <assets>
             <icon>icon.png</icon>

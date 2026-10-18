@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.video.prehrajto" version="2.0.5.1" name="Prehraj.to - Kodi" provider-name="WrightDerby, česká úprava radcz">
+    <requires>
+        <import addon="xbmc.python" version="3.0.0"/>
+        <import addon="script.module.requests" version="2.22.0"/>
+        <import addon="script.module.beautifulsoup4" version="4.6.2"/>
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="main.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="cs_CZ">Prehraj.to - filmy a seriály (česká verze)</summary>
+        <summary lang="en_GB">Prehraj.to - movies and TV shows (Czech version)</summary>
+        <description lang="cs_CZ">Hledání a přehrávání videí z prehraj.to, filmy a seriály podle TMDB, pokračování v přehrávání, stahování na pozadí (i více videí najednou) a ukládání do knihovny. Pro přehrávání je potřeba PREMIUM účet - údaje zadejte v nastavení doplňku. Registrace: https://shorturl.at/3kTcF</description>
+        <description lang="en_GB">Search and play videos from prehraj.to, TMDB movies and TV shows, resume, background downloads and library export. A PREMIUM account is required for playback.</description>
+        <news>2.0.5.1 - česká verze, stahování na pozadí s frontou, výběr více videí ke stažení, náhledy a stránkování ve výsledcích, data v addon_data</news>
+        <website>https://shorturl.at/3kTcF</website>
+        <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+        </assets>
+    </extension>
+</addon>
