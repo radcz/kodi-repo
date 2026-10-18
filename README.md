@@ -6,8 +6,8 @@ Veřejný repozitář doplňků pro [Kodi](https://kodi.tv) 19, 20 a 21. Funguje
 |---|---|---|
 | `repository.radek` | 1.0.3 | tento repozitář, přes který se doplňky instalují a aktualizují |
 | `plugin.video.sosac-2` | 3.1.2.6 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
-| `plugin.video.prehrajto` | 2.0.5.1 | Prehraj.to česky: hledání s náhledy, stahování na pozadí, výběr více videí (vyžaduje Premium) |
-| `plugin.video.freevideo` | 1.5.0 | Video FREE: 14 webů (FreeVideo.cz, YourLesbians, Lesbian8, xHamster, Pornhub, PornTrex, xVideos, XNXX, Eporner, YouPorn, RedTube, Tube8, YouJizz, PornOne), lesbické výpisy vždy nahoře, přehrávání i stahování |
+| `plugin.video.prehrajto` | 2.0.5.2 | Prehraj.to česky: hledání s náhledy, stahování na pozadí jen ve 4K/2K, celá stránka najednou (vyžaduje Premium) |
+| `plugin.video.freevideo` | 1.6.0 | Video FREE: 14 webů, lesbické výpisy vždy nahoře, stahování celé stránky, jen přesně 1080p |
 | `repository.dobbelina` | 1.0.4.1 | repozitář Dobbelina (Cumination) s vlastní ikonou |
 | `repository.slyguy` | 0.0.9 | repozitář SlyGuy, z něj se instaluje HBO Max (viz níže) |
 
