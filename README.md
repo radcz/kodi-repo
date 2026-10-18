@@ -1,45 +1,76 @@
 # Radek Kodi Repository
 
-Vlastní repozitář doplňků pro [Kodi](https://kodi.tv) (testováno na Kodi 21 „Omega“).
+Veřejný repozitář doplňků pro [Kodi](https://kodi.tv) 19, 20 a 21. Funguje na **Apple TV, iPadu/iPhonu, Macu, Windows, Androidu i Linuxu**.
 
 | Doplněk | Verze | Popis |
 |---|---|---|
-| `plugin.video.freevideo` | 1.2.0 | FreeVideo.cz: výpisy, kategorie, hledání, přehrávání |
-| `plugin.video.sosac-2` | 3.1.2.3 | Sosac.TV s opravami a stahováním (viz níže) |
-| `repository.radek` | 1.0.1 | samotný repozitář, díky kterému se doplňky aktualizují |
+| `repository.radek` | 1.0.2 | tento repozitář, přes který se doplňky instalují a aktualizují |
+| `plugin.video.sosac-2` | 3.1.2.4 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
+| `plugin.video.freevideo` | 1.2.0 | Video FREE (FreeVideo.cz) |
+| `repository.dobbelina` | 1.0.4.1 | repozitář Dobbelina (Cumination) s vlastní ikonou |
 
-## Instalace do Kodi
+Ke stažení jsou také `repository.sosacRepo`, `repository.prehraj.to` a `repository.slyguy` (HBO Max).
 
-1. **Nastavení → Systém → Doplňky** → zapnout **Neznámé zdroje**.
-2. **Nastavení → Správce souborů → Přidat zdroj** → zadat
-   `https://radcz.github.io/kodi-repo/` (název třeba `radek`).
-3. **Doplňky → Instalovat ze ZIP souboru** → `radek` → `repository.radek` → `repository.radek-1.0.1.zip`.
-4. **Doplňky → Instalovat z repozitáře → Radek Repository** → vybrat doplněk.
+**Adresa zdroje pro Kodi: `https://radcz.github.io/kodi-repo/`**
 
-ZIP repozitáře jde stáhnout i přímo:
-[repository.radek-1.0.1.zip](repository.radek/repository.radek-1.0.1.zip)
+V repozitáři nejsou žádná hesla. Přihlašovací údaje k Sosacu a Streamuj.tv zadáte až v Kodi v nastavení doplňku.
 
-## Sosac.TV 3.1.2.3: co je nového a opraveno oproti 3.1.2
+---
 
-- **Stahování:** volba *Offline v Kodi* (funguje i na iPadu) nebo *složka v počítači*; tlačítka *Stáhnout vše na této stránce* a *Stáhnout vybrané…* u filmů i dílů; stahování ve frontě po jednom.
-- **Průběh stahování:** lišta s procenty, MB a rychlostí v rohu Kodi; ve *Stažených* přehled probíhajících a čekajících stahování a *Zrušit stahování*. Do počítače se stahuje do podsložky `Sosac`.
-- **Mazání stažených:** *Smazat vybrané…*, *Smazat vše v této složce*, *Smazat celou složku* (kontextové menu) a *Smazat všechno stažené*.
-- Vzhled Sosacu se nastaví jednou natrvalo, takže při přepínání mezi doplňky už nevyskakuje „Ponechat vzhled?“ (původní přepínání lze zapnout v nastavení).
-- Ladicí výpisy už se nezapisují do běžného logu Kodi (dřív v něm bylo uživatelské jméno a otisk hesla).
-- Odstraněno problikávání: služba se každou sekundu pokoušela přepnout na skin, který Kodi ještě nezaregistroval.
-- Opraveno zvýraznění vybrané položky v menu (skin `skin.estuary-sosac` 3.0.1).
-- Doplněk už nemaže všechny uložené pozice přehrávání v Kodi (i u jiných doplňků) a nepřepisuje `advancedsettings.xml`.
-- Síťové dotazy mají časový limit a účet se ověřuje jen jednou, ne před každým dotazem.
-- Přehrávání: správný výběr jazyka a kvality, náhradní stream, ošetření prázdné odpovědi a neznámého jazyka.
-- Neúspěšné spuštění videa už nesmaže na serveru pozici „pokračovat od“.
-- Dotaz „pokračovat / od začátku“ se objeví před spuštěním videa.
-- Opravy pádů (chybějící `self`, nedefinované proměnné při stahování seriálů, poškozený jazykový soubor).
-- Do Správce souborů se automaticky přidají zdroje Sosac, Prehraj.to, dobbelina a SlyGuy.
+## Instalace (stejná na Apple TV, iPadu i ostatních Kodi)
+
+1. **Nastavení (ozubené kolo) → Systém → Doplňky** → zapnout **Neznámé zdroje** → potvrdit **Ano**.
+2. **Nastavení → Správce souborů → Přidat zdroj → `<Žádný>`** → napsat
+   `https://radcz.github.io/kodi-repo/` → **OK** → název zdroje `radek` → **OK**.
+3. **Doplňky → ikona otevřené krabice (vlevo nahoře) → Instalovat ze ZIP souboru → `radek`**
+   → **`repository.radek-1.0.2.zip`**. Počkejte na hlášku „Doplněk povolen“.
+4. **Instalovat z repozitáře → Radek Repository → Video doplňky** → **Sosac.TV** (a podle chuti **Video FREE**) → **Instalovat**.
+   Kodi samo doinstaluje potřebné knihovny (requests, six, routing) z oficiálního repozitáře Kodi.
+5. **Restartujte Kodi.** Sosac při prvním startu nainstaluje svůj vzhled a přidá do Správce souborů zdroje
+   (radek, Sosac, Prehraj.to, dobbelina, SlyGuy).
+6. **Doplňky → Sosac.TV → Nastavení → Účty**: zadejte jméno a heslo k Sosacu a Streamuj.tv.
+
+Další repozitáře (Dobbelina, Prehraj.to, SlyGuy) nainstalujete stejně, v kroku 3 jen vyberete jejich ZIP.
+
+### Apple TV
+
+- Kodi pro Apple TV se instaluje mimo App Store (na tvOS není oficiálně). Postup najdete na [kodi.wiki: tvOS](https://kodi.wiki/view/TvOS).
+- Text se píše ovladačem nebo přes **Klávesnici Apple TV** na iPhonu (nabídne se sama při psaní adresy).
+- Kontextové menu (Stáhnout, Smazat, Zrušit stahování) otevřete **podržením středu ovladače**.
+- Stahuje se rovnou **Offline do Kodi**. Pozor: tvOS může při nedostatku místa uložená data aplikací mazat, offline videa proto berte jako dočasná.
+
+### iPad / iPhone
+
+- Kodi pro iPadOS se instaluje mimo App Store ([kodi.wiki: iOS](https://kodi.wiki/view/IOS)).
+- Stahuje se rovnou **Offline do Kodi** a videa pak jdou přehrát i bez internetu.
+- Kontextové menu otevřete **dlouhým podržením** položky.
+
+### Mac, Windows, Android, Linux
+
+- Při stahování si můžete vybrat **Offline v Kodi** nebo **Do složky v počítači** (ukládá se do podsložky `Sosac`).
+- Volbu lze nastavit natrvalo: **Sosac.TV → Nastavení → Stahování → Kam stahovat**.
+
+### Aktualizace
+
+Kodi si nové verze stahuje z tohoto repozitáře samo. Ručně: **Doplňky → Moje doplňky → Sosac.TV → Aktualizovat**.
+
+---
+
+## Sosac.TV 3.1.2.4: co je nového a opraveno oproti 3.1.2
+
+- **Apple TV a iPad:** stahuje se rovnou offline do Kodi. Kompatibilita s Kodi 19 (Python 3.8).
+- **Průběh stahování:** lišta s procenty, MB a rychlostí v rohu Kodi. Ve *Stažených* je přehled probíhajících a čekajících stahování a volba *Zrušit stahování*.
+- **Stahování:** *Offline v Kodi* nebo *složka v počítači*, *Stáhnout vše na této stránce*, *Stáhnout vybrané…*, fronta po jednom.
+- **Mazání stažených:** *Smazat vybrané…*, *Smazat vše v této složce*, *Smazat celou složku*, *Smazat všechno stažené*.
+- Při přepínání mezi doplňky už nevyskakuje „Ponechat vzhled?“.
+- Do logu Kodi se už nezapisuje uživatelské jméno ani otisk hesla.
+- Opraveno problikávání, zvýraznění položky v menu, mazání pozic přehrávání u jiných doplňků, zamrzání bez časového limitu, výběr jazyka a kvality streamu, ukládání titulků a pády při stahování seriálů.
 
 Původní doplněk: sosac.tv (licence GPL). Tato verze je neoficiální úprava pro vlastní použití.
 
 ## Struktura
 
-- kořen repozitáře: `addons.xml`, `addons.xml.md5` a ZIPy doplňků (to čte Kodi)
+- `index.html` a `*.zip` v kořeni: instalace přes zdroj v Kodi
+- `addons.xml`, `addons.xml.md5`, `<doplněk>/`: data repozitáře, která čte Kodi
 - `src/`: zdrojové kódy doplňků
-- `tools/build_repo.py`: sestavení `addons.xml` a ZIPů
+- `tools/build_all.py`: sestavení celého repozitáře

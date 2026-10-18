@@ -1,5 +1,76 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addons>
+<addon id="repository.radek" name="[COLOR deepskyblue]Radek[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="1.0.2" provider-name="Radek">
+    <extension point="xbmc.addon.repository" name="Radek Repository">
+        <dir>
+            <info compressed="false">https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml</info>
+            <checksum>https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml.md5</checksum>
+            <datadir zip="true">https://raw.githubusercontent.com/radcz/kodi-repo/main/</datadir>
+        </dir>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="cs_CZ">Vlastní repozitář doplňků (Sosac.TV, Video FREE, Dobbelina)</summary>
+        <summary lang="en_GB">Personal add-on repository</summary>
+        <description lang="cs_CZ">Opravený Sosac.TV, Video FREE a repozitář Dobbelina s aktualizacemi. Funguje na Macu, Windows, Androidu, Apple TV i iPadu.</description>
+        <description lang="en_GB">Patched Sosac.TV, Video FREE and the Dobbelina repository with updates. Works on macOS, Windows, Android, Apple TV and iPad.</description>
+        <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+        </assets>
+    </extension>
+</addon>
+
+<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.4" provider-name="zak">
+    <requires>
+        <import addon="xbmc.python" version="3.0.0" />
+		<import addon="script.module.six" version="1.11.0"/>
+        <import addon="script.module.requests" version="2.22.0" />
+        <import addon="script.module.routing" version="0.2.3" />
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="default.py">
+        <provides>video</provides>
+    </extension>
+  <extension point="xbmc.service" library="service.py">
+  </extension>
+    <extension point="xbmc.addon.metadata">
+        <platform>all</platform>
+        <summary lang="en_GB">Stream</summary>
+        <summary lang="cs_CZ">Stream</summary>
+        <summary lang="sk_SK">Stream</summary>
+        <description lang="cs_CZ">Přehrávejte tisíce filmů a seriálů s CZ/SK dabingem či titulky dostupných na sosac.tv online i offline.</description>
+        <description lang="en_GB">Play thousands of movies and series with CZ/SK dubbing or subtitles available on sosac.tv online and offline.</description>
+		<description lang="sk_SK">Prehrávajte tisíce filmov a seriálov s CZ/SK dabingom či titulkami dostupných na sosac.tv online i offline.</description>
+        <source></source>
+        <assets>
+            <icon>icon.png</icon>
+			<fanart>fanart.png</fanart>
+        </assets>
+        <news>
+3.1.2.4
+- Apple TV a iPad: stahuje se rovnou offline do Kodi (bez dotazu na složku v počítači)
+- Kompatibilita s Kodi 19 (Python 3.8)
+3.1.2.3
+- Průběh stahování: lišta s procenty, MB a rychlostí v rohu Kodi
+- Ve Stažených: probíhající a čekající stahování s procenty, Zrušit stahování
+- Stahování do počítače do podsložky Sosac
+- Opravena chyba "Error getting" při mazání videa
+3.1.2.2
+- Stahování: volba Offline v Kodi (i pro iPad) nebo složka v počítači
+- Stáhnout vše na stránce / Stáhnout vybrané (filmy i díly)
+- Mazání stažených: vybrané, vše ve složce, celá složka, všechno stažené
+- Stahování ve frontě po jednom (dřív všechno naráz)
+- Další opravy chyb (přehrávání, titulky, stahování seriálů)
+3.1.2.1 (opravy)
+- Opraveno problikávání (opakované načítání skinu každou sekundu)
+- Opraveno zvýraznění vybrané položky v menu (skin 3.0.1)
+- Doplněk už nemaže pozice přehrávání ostatních doplňků a nepřepisuje advancedsettings.xml
+- Časový limit síťových dotazů, ověření účtu jen jednou
+- Opraven výběr streamu (jazyk/kvalita)
+- Automatické přidání zdrojů do Správce souborů
+        </news>
+    </extension>
+</addon>
+
 <addon id="plugin.video.freevideo" name="Video FREE" version="1.2.0" provider-name="Radek">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
@@ -28,71 +99,30 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.3" provider-name="zak">
-    <requires>
-        <import addon="xbmc.python" version="3.0.0" />
-		<import addon="script.module.six" version="1.11.0"/>
-        <import addon="script.module.requests" version="2.22.0" />
-        <import addon="script.module.routing" version="0.2.3" />
-    </requires>
-    <extension point="xbmc.python.pluginsource" library="default.py">
-        <provides>video</provides>
+<addon id="repository.dobbelina" name="[COLOR pink]Dobbelina Repository[/COLOR]" version="1.0.4.1" provider-name="dobbelina">
+    <extension point="xbmc.addon.repository" name="[COLOR pink]Dobbelina Repository[/COLOR]">
+    <dir>
+        <info compressed="false">https://raw.githubusercontent.com/Gujal00/smrzips/master/addons.xml</info>
+        <checksum>https://raw.githubusercontent.com/Gujal00/smrzips/master/addons.xml.md5</checksum>
+        <datadir zip="true">https://raw.githubusercontent.com/Gujal00/smrzips/master/zips/</datadir>
+</dir>
+<dir>
+        <info compressed="false">https://raw.githubusercontent.com/dobbelina/repository.dobbelina/master/addons.xml</info>
+        <checksum>https://raw.githubusercontent.com/dobbelina/repository.dobbelina/master/addons.xml.md5</checksum>
+        <datadir zip="true">https://raw.githubusercontent.com/dobbelina/repository.dobbelina/master/</datadir>
+		</dir>
     </extension>
-  <extension point="xbmc.service" library="service.py">
-  </extension>
     <extension point="xbmc.addon.metadata">
-        <platform>all</platform>
-        <summary lang="en_GB">Stream</summary>
-        <summary lang="cs_CZ">Stream</summary>
-        <summary lang="sk_SK">Stream</summary>
-        <description lang="cs_CZ">Přehrávejte tisíce filmů a seriálů s CZ/SK dabingem či titulky dostupných na sosac.tv online i offline.</description>
-        <description lang="en_GB">Play thousands of movies and series with CZ/SK dubbing or subtitles available on sosac.tv online and offline.</description>
-		<description lang="sk_SK">Prehrávajte tisíce filmov a seriálov s CZ/SK dabingom či titulkami dostupných na sosac.tv online i offline.</description>
-        <source></source>
-        <assets>
-            <icon>icon.png</icon>
-			<fanart>fanart.png</fanart>
-        </assets>
-        <news>
-3.1.2.3
-- Průběh stahování: lišta s procenty, MB a rychlostí v rohu Kodi
-- Ve Stažených: probíhající a čekající stahování s procenty, Zrušit stahování
-- Stahování do počítače do podsložky Sosac
-- Opravena chyba "Error getting" při mazání videa
-3.1.2.2
-- Stahování: volba Offline v Kodi (i pro iPad) nebo složka v počítači
-- Stáhnout vše na stránce / Stáhnout vybrané (filmy i díly)
-- Mazání stažených: vybrané, vše ve složce, celá složka, všechno stažené
-- Stahování ve frontě po jednom (dřív všechno naráz)
-- Další opravy chyb (přehrávání, titulky, stahování seriálů)
-3.1.2.1 (opravy)
-- Opraveno problikávání (opakované načítání skinu každou sekundu)
-- Opraveno zvýraznění vybrané položky v menu (skin 3.0.1)
-- Doplněk už nemaže pozice přehrávání ostatních doplňků a nepřepisuje advancedsettings.xml
-- Časový limit síťových dotazů, ověření účtu jen jednou
-- Opraven výběr streamu (jazyk/kvalita)
-- Automatické přidání zdrojů do Správce souborů
-        </news>
-    </extension>
-</addon>
+        <summary>Unofficial Addons for Kodi</summary>
+		<description>For Cumination Updates
+Please visit
+https://github.com/dobbelina/repository.dobbelina/issues
+for support!
 
-<addon id="repository.radek" name="[COLOR deepskyblue]Radek[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="1.0.1" provider-name="Radek">
-    <extension point="xbmc.addon.repository" name="Radek Repository">
-        <dir>
-            <info compressed="false">https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml</info>
-            <checksum>https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml.md5</checksum>
-            <datadir zip="true">https://raw.githubusercontent.com/radcz/kodi-repo/main/</datadir>
-        </dir>
-    </extension>
-    <extension point="xbmc.addon.metadata">
-        <summary lang="cs_CZ">Vlastní repozitář doplňků (Video FREE, Sosac.TV s opravami)</summary>
-        <summary lang="en_GB">Personal add-on repository</summary>
-        <description lang="cs_CZ">Repozitář s doplňky Video FREE a Sosac.TV (opravená verze) a jejich aktualizacemi.</description>
-        <description lang="en_GB">Repository with the Video FREE and patched Sosac.TV add-ons and their updates.</description>
+Kodi is a registered trademark of the XBMC Foundation. We are not connected to or in any other way affiliated with Kodi, Team Kodi, or the XBMC Foundation.</description>
+<disclaimer>The owners and submitters to this repository do not host or distribute any of the content displayed by these addons nor do they have any affiliation with the content providers.</disclaimer>
+<forum>https://github.com/dobbelina/repository.dobbelina/issues</forum>
         <platform>all</platform>
-        <assets>
-            <icon>icon.png</icon>
-        </assets>
     </extension>
 </addon>
 </addons>

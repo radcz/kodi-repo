@@ -27,6 +27,7 @@ DOMAIN = ["https://kodi-api.sosac.to/settings","https://tv.sosac.ph/settings.jso
 
 # Zdroje ve Správci souborů (Nastavení -> Správce souborů), aby se nemusely zadávat ručně.
 FILE_SOURCES = [
+    ("Radek repozitář", "https://radcz.github.io/kodi-repo/"),
     ("https://kodi.sosac.to", "https://kodi.sosac.to/"),
     ("http://kodi.crocody.com/ - Prehraj.to", "http://kodi.crocody.com/"),
     ("https://dobbelina.github.io/", "https://dobbelina.github.io/"),
@@ -135,7 +136,8 @@ def ensure_sources():
             done.append(path)
 
         if added :
-            ET.indent(tree, space="    ")
+            if hasattr(ET, "indent") :   # Python 3.9+ (Kodi 19 na některých zařízeních má 3.8)
+                ET.indent(tree, space="    ")
             tree.write(sourcesPath, encoding="utf-8")
             notify(translate(30402), translate(30414), 10000)
         addon.setSetting("sources_added", "|".join(done))

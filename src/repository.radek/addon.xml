@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="repository.radek" name="[COLOR deepskyblue]Radek[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="1.0.1" provider-name="Radek">
+<addon id="repository.radek" name="[COLOR deepskyblue]Radek[/COLOR] [COLOR hotpink]Repository[/COLOR]" version="1.0.2" provider-name="Radek">
     <extension point="xbmc.addon.repository" name="Radek Repository">
         <dir>
             <info compressed="false">https://raw.githubusercontent.com/radcz/kodi-repo/main/addons.xml</info>
@@ -8,10 +8,10 @@
         </dir>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="cs_CZ">Vlastní repozitář doplňků (Video FREE, Sosac.TV s opravami)</summary>
+        <summary lang="cs_CZ">Vlastní repozitář doplňků (Sosac.TV, Video FREE, Dobbelina)</summary>
         <summary lang="en_GB">Personal add-on repository</summary>
-        <description lang="cs_CZ">Repozitář s doplňky Video FREE a Sosac.TV (opravená verze) a jejich aktualizacemi.</description>
-        <description lang="en_GB">Repository with the Video FREE and patched Sosac.TV add-ons and their updates.</description>
+        <description lang="cs_CZ">Opravený Sosac.TV, Video FREE a repozitář Dobbelina s aktualizacemi. Funguje na Macu, Windows, Androidu, Apple TV i iPadu.</description>
+        <description lang="en_GB">Patched Sosac.TV, Video FREE and the Dobbelina repository with updates. Works on macOS, Windows, Android, Apple TV and iPad.</description>
         <platform>all</platform>
         <assets>
             <icon>icon.png</icon>

@@ -1382,7 +1382,7 @@ msgid "Surround"
 msgstr "Surround"
 
 msgctxt "#30414"
-msgid "Add-on sources (Sosac, Prehraj.to, HBO, dobbelina) were added to the File manager. Restart Kodi to use them."
+msgid "Add-on sources (Radek, Sosac, Prehraj.to, HBO, dobbelina) were added to the File manager. Restart Kodi to use them."
 msgstr ""
 
 msgctxt "#30415"

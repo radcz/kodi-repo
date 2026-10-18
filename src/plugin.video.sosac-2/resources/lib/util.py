@@ -343,10 +343,17 @@ def down_paths(idx) :
 def available_roots() :
     return [ROOT_OFFLINE, ROOT_PC] if pc_root() else [ROOT_OFFLINE]
 
+def is_apple_mobile() :
+    # Apple TV (tvOS) a iPad/iPhone (iOS): žádná "složka v počítači", stahuje se do Kodi
+    try :
+        return xbmc.getCondVisibility("System.Platform.TVOS") or xbmc.getCondVisibility("System.Platform.IOS")
+    except Exception :
+        return False
+
 def choose_root() :
     # Kam stahovat: podle nastavení "download-target" (0 = zeptat se, 1 = offline, 2 = počítač).
     target = __set__("download-target") or "0"
-    if target == "1" :
+    if target == "1" or (target == "0" and is_apple_mobile() and not pc_root()) :
         return ROOT_OFFLINE
     if target == "2" :
         idx = ROOT_PC
