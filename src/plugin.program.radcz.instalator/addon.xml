@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.program.radcz.instalator" name="[COLOR deepskyblue]radcz[/COLOR] – instalátor všeho" version="1.0.0" provider-name="radcz">
+    <requires>
+        <import addon="xbmc.python" version="3.0.0"/>
+    </requires>
+    <extension point="xbmc.python.script" library="default.py">
+        <provides>executable</provides>
+    </extension>
+    <extension point="xbmc.service" library="service.py"/>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="cs_CZ">Jeden ZIP: nainstaluje radcz Repository, Sosac.TV, Prehraj.to (česky) a Video FREE</summary>
+        <summary lang="en_GB">One ZIP: installs radcz Repository, Sosac.TV, Prehraj.to and Video FREE</summary>
+        <description lang="cs_CZ">Po instalaci ze ZIPu se sám spustí: přidá a zapne repozitáře radcz, Sosac, Prehraj.to, Dobbelina a SlyGuy (HBO Max) a z radcz Repository nainstaluje Sosac.TV, Prehraj.to (česká verze) a Video FREE včetně potřebných knihoven. Znovu jde spustit v Doplňky → Programy (doplní, co chybí). Funguje na Macu, Windows, Androidu, Apple TV i iPadu.</description>
+        <description lang="en_GB">Runs automatically after installing from ZIP: adds and enables the radcz, Sosac, Prehraj.to, Dobbelina and SlyGuy repositories and installs Sosac.TV, Prehraj.to and Video FREE from radcz Repository.</description>
+        <platform>all</platform>
+        <news>1.0.0 - první verze</news>
+        <assets>
+            <icon>icon.png</icon>
+        </assets>
+    </extension>
+</addon>

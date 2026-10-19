@@ -208,6 +208,8 @@ def delete_video(path) :
     if not inside_root(path) or not os.path.isfile(path) :
         return 0
     os.remove(path)
+    if os.path.exists(path + ".part") :
+        os.remove(path + ".part")
     base = os.path.splitext(os.path.basename(path))[0]
     for sub in (os.path.join(sub_dir_for(path), base + ".srt"), os.path.splitext(path)[0] + ".srt") :
         try :
@@ -234,7 +236,12 @@ def delete_path(path) :
 
 def progress_label(entry) :
     pct = entry.get("percent", 0)
-    if pct is None or pct < 0 :
+    if pct is None : pct = 0
+    if entry.get("status") == "paused" :
+        return "[COLOR deepskyblue]%s %d %%[/COLOR]" % (translate(30457), max(pct, 0))
+    if entry.get("status") == "error" :
+        return "[COLOR orange]%s %d %%[/COLOR]" % (translate(30458), max(pct, 0))
+    if pct < 0 :
         return "[COLOR grey]%s[/COLOR]" % translate(30442)
     if entry.get("stale") :
         return "[COLOR orange]%s %d %%[/COLOR]" % (translate(30443), pct)
@@ -634,9 +641,11 @@ def downmulti():
     queue = []
     for x in page :
         file_id = f'{x["id"]}-{int(time.time())}{len(queue)}'
-        resolve, subtitles = make_resolver(x["link"], key1, key2, os.path.join(moviesSub, file_id + ".srt"), "sub" in key3)
+        sub_dest = os.path.join(moviesSub, file_id + ".srt")
+        resolve, subtitles = make_resolver(x["link"], key1, key2, sub_dest, "sub" in key3)
         queue.append({"title": x["title"], "dest": os.path.join(moviesPath, file_id + ".mp4"),
-                      "resolve": resolve, "subs": subtitles})
+                      "resolve": resolve, "subs": subtitles,
+                      "info": {"link": x["link"], "k1": key1, "k2": key2, "sub_dest": sub_dest, "subs": "sub" in key3}})
         try :
             save_key(movie_data, str(x["id"]), key1, key2, key3)
         except Exception as e :
@@ -710,13 +719,39 @@ def downcancel():
     path = plugin.args.get("path", [""])[0]
     if path and dialog.yesno(translate(30402), translate(30444) + "?\n" + os.path.basename(path)) :
         cancel_under(path)
-        if path in progress_all() and progress_all()[path].get("stale") :
-            # přerušené stahování (Kodi bylo mezitím zavřené): jen uklidit
-            from resources.lib.downThread import progress_remove
-            progress_remove(path)
-            if os.path.isfile(path) and inside_root(path) : delete_video(path)
         notify(translate(30402), translate(30441), time=3000)
         xbmc.sleep(1500)
+    xbmc.executebuiltin('Container.Refresh')
+
+@plugin.route('/downpause')
+def downpause():
+    path = plugin.args.get("path", [""])[0]
+    targets = [d for d, e in progress_all().items() if is_running(e)] if path == "*" else [path]
+    for d in targets :
+        pause_download(d)
+    xbmc.sleep(3500)   # stahování se zastaví nejpozději do několika sekund
+    xbmc.executebuiltin('Container.Refresh')
+
+@plugin.route('/downresume')
+def downresume():
+    use_root(root_arg())
+    path = plugin.args.get("path", [""])[0]
+    data = progress_all()
+    targets = [d for d, e in data.items() if not is_running(e)] if path == "*" else [path]
+    queue = []
+    for dest in targets :
+        entry = data.get(dest)
+        if not entry or is_running(entry) :
+            continue
+        info = entry.get("info") or {}
+        if info.get("link") :
+            # odkaz na stream po čase vyprší, proto se zjistí znovu
+            resolve, subtitles = make_resolver(info["link"], info.get("k1"), info.get("k2"), info.get("sub_dest"), info.get("subs", False))
+        else :
+            resolve, subtitles = entry.get("url"), None
+        queue.append({"title": entry.get("title"), "dest": dest, "resolve": resolve, "subs": subtitles, "info": info})
+    run_queue(queue)
+    xbmc.sleep(1500)
     xbmc.executebuiltin('Container.Refresh')
 
 @plugin.route('/downrefresh')
@@ -1355,13 +1390,29 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
             li.setArt({'icon': 'DefaultIconError.png'})
             addDirectoryItem(plugin.handle, plugin.url_for(downmanage, root=CUR_ROOT, path=cur_dir, mode=mode), li, False)
         progress = progress_for_root()
-        # aktivní stahování nahoře, pak čekající ve frontě
-        for dest, entry in sorted(progress.items(), key=lambda x: (x[1].get("percent", 0) < 0, x[1].get("title", ""))) :
+        running = [d for d, e in progress.items() if is_running(e)]
+        resumable = [d for d, e in progress.items() if not is_running(e)]
+        if len(running) > 1 :
+            li = ListItem("[COLOR deepskyblue]%s[/COLOR]" % translate(30459))
+            addDirectoryItem(plugin.handle, plugin.url_for(downpause, root=CUR_ROOT, path="*"), li, False)
+        if len(resumable) > 1 :
+            li = ListItem("[COLOR deepskyblue]%s[/COLOR]" % translate(30460))
+            addDirectoryItem(plugin.handle, plugin.url_for(downresume, root=CUR_ROOT, path="*"), li, False)
+        # aktivní stahování nahoře, pak čekající ve frontě, pak pozastavené
+        for dest, entry in sorted(progress.items(), key=lambda x: (not is_running(x[1]), x[1].get("percent", 0) < 0, x[1].get("title", ""))) :
             li = ListItem("[B]%s[/B]  %s" % (entry.get("title", os.path.basename(dest)), progress_label(entry)))
             li.setArt({'icon': get_icon("download.png")})
             li.setProperty('infomenu', translate(30445))
-            li.addContextMenuItems([(translate(30444), "RunPlugin(%s)" % plugin.url_for(downcancel, root=CUR_ROOT, path=dest))])
-            addDirectoryItem(plugin.handle, plugin.url_for(downrefresh), li, False)
+            menu = []
+            if is_running(entry) :
+                menu.append((translate(30455), "RunPlugin(%s)" % plugin.url_for(downpause, root=CUR_ROOT, path=dest)))
+                click = plugin.url_for(downrefresh)
+            else :
+                menu.append((translate(30456), "RunPlugin(%s)" % plugin.url_for(downresume, root=CUR_ROOT, path=dest)))
+                click = plugin.url_for(downresume, root=CUR_ROOT, path=dest)   # klik = pokračovat
+            menu.append((translate(30444), "RunPlugin(%s)" % plugin.url_for(downcancel, root=CUR_ROOT, path=dest)))
+            li.addContextMenuItems(menu)
+            addDirectoryItem(plugin.handle, click, li, False)
         if epi_id == "serials" :
             debug("show_plug_list download dir start %s"%start, 2) 
             dir_list , fil_list = xbmcvfs.listdir(start)
@@ -2416,7 +2467,7 @@ def downloaded(mov_ser,dir_n):
         data["name2"] = ""
         file_dict[item_id] = data["info"]
     if mov_ser != "tvshows" :
-        list_of_files = [ x.split(".")[0] for x in list_of_files]
+        list_of_files = [ x.split(".")[0] for x in list_of_files if x.endswith(".mp4")]
         list_of_files = [ (x.split("-")[0],int(x.split("-")[1])) for x in list_of_files]    
         list_of_files.sort(key=sortSecond, reverse=True)
         debug("downloaded list_of_files apres traitement %s"%list_of_files,2)
@@ -2725,7 +2776,7 @@ def downsais(sais_id,title,sdsais_list):
         filename = fileId + ".mp4"
 
         dest =  filePath + "/" + filename
-        sais_list.append((link_url,dest))
+        sais_list.append((link_url,dest,link_id,k1,k2))
         try :
             save_key(serial_data,str(item),key1,key2,key3)
         except Exception as e :
@@ -2817,7 +2868,7 @@ def downserial(sais_id):
                     fileId = str(epis_id) + "-" + str(int(time.time()))
                     filename = fileId + ".mp4"
                     dest =  filePath + "/" + filename
-                    sais_list.append((link_url,dest))
+                    sais_list.append((link_url,dest,link_id,k1,k2))
                     try :
                         save_key(serial_data,epis_id,key1,key2,key3)
                     except Exception as e :
@@ -2908,7 +2959,7 @@ def downserialcom(sais_id):
                     filename = str(epis_id) + "-" + str(int(time.time())) + ".mp4"
 
                     dest =  filePath + "/" + filename
-                    sais_list.append((link_url,dest))
+                    sais_list.append((link_url,dest,link_id,k1,k2))
                     try :
                         save_key(serial_data,epis_id,key1,key2,key3)
                     except Exception as e :
@@ -2976,7 +3027,7 @@ def prepa_list(s_id, data, sais_n, id_list, dir_name, ex_list) :
             fileId = str(epis_id) + "-" + str(int(time.time()))
             filename = fileId + ".mp4"
             dest =  dir_name + "/" + filename
-            sais_list.append((link_url,dest))
+            sais_list.append((link_url,dest,link_id,k1,k2))
             debug("prepalist  sais_list %s"%sais_list, 2)
             try :
                 save_key(serial_data,epis_id,key1,key2,key3)
@@ -3365,7 +3416,7 @@ def downloadPlug(mov_ser,m_id,link_id):
             fileId = str(m_id) + "-" + str(int(time.time()))
             filename = fileId + ".mp4"
             dest =  moviesPath + "/" + filename if mov_ser == "movies" else seriesPath + "/" + filename
-            downloadFil(link_url, dest) 
+            downloadFil(link_url, dest, {"link": link_id, "k1": key1, "k2": key2})
             if ("sub" in key3) and ("subtitles" in data['URL'][key1]) :                     
                 subt_url_dict = data['URL'][key1]["subtitles"]
                 sub_keys = list(subt_url_dict.keys())
@@ -3803,8 +3854,13 @@ def downloadSais(vid_list):
         notify(translate(30402), tr(30453, len(SKIPPED)), time=6000)
         del SKIPPED[:]
     # dřív se spustila všechna stahování naráz a mezi nimi běžela 5s smyčka naprázdno
-    items = [{"resolve": url, "dest": dest, "title": os.path.basename(os.path.dirname(dest)) + " " + os.path.basename(dest).split("-")[0]}
-             for url, dest in vid_list]
+    items = []
+    for it in vid_list :
+        url, dest = it[0], it[1]
+        item = {"resolve": url, "dest": dest, "title": os.path.basename(os.path.dirname(dest)) + " " + os.path.basename(dest).split("-")[0]}
+        if len(it) >= 5 and it[2] :
+            item["info"] = {"link": it[2], "k1": it[3], "k2": it[4]}
+        items.append(item)
     run_queue(items)
     if plugin.handle >= 0 :
         endOfDirectory(plugin.handle)

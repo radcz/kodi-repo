@@ -24,7 +24,7 @@ import hashlib
 import hjson
 import xbmcvfs
 
-from resources.lib.downloader import Downloader, SkipVideo
+from resources.lib.downloader import Downloader, SkipVideo, download_state
 
 
 _url = sys.argv[0]
@@ -839,6 +839,8 @@ def search(name, page_url=None, page_no=1):
             ('Stáhnout', 'RunPlugin({})'.format(get_url(action='download', url=v['url'], title=v['title']))),
             ('Stáhnout více z této stránky...', 'RunPlugin({})'.format(get_url(action='download_multi', url=first_page))),
             ('Stáhnout celou stránku', 'RunPlugin({})'.format(get_url(action='download_page', url=first_page))),
+            ('Pozastavit / pokračovat ve stahování', 'RunPlugin({})'.format(get_url(action='download_toggle'))),
+            ('Zrušit stahování', 'RunPlugin({})'.format(get_url(action='download_cancel'))),
             ('Uložit do knihovny', 'RunPlugin({})'.format(get_url(action='library', url=v['url']))),
             ('QR kód streamu', 'RunPlugin({})'.format(get_url(action='qr', url=v['url']))),
         ])
@@ -1065,10 +1067,24 @@ def menu():
         li = xbmcgui.ListItem('Stažená videa')
         li.setArt({'icon': ICON, 'thumb': ICON})
         xbmcplugin.addDirectoryItem(_handle, folder, li, True)
-    li = xbmcgui.ListItem('[COLOR gray]Zrušit stahování[/COLOR]')
-    li.setArt({'icon': ICON, 'thumb': ICON})
-    xbmcplugin.addDirectoryItem(_handle, get_url(action='download_cancel'), li, False)
-    xbmcplugin.endOfDirectory(_handle)
+    state = download_state()
+    queued = downloader().queued()
+    controls = []
+    if state == 'running':
+        controls.append(('[COLOR yellow]Pozastavit stahování[/COLOR]  [COLOR gray]({} ve frontě)[/COLOR]'.format(queued),
+                         'download_pause'))
+    elif state == 'paused':
+        controls.append(('[COLOR lime]Pokračovat ve stahování[/COLOR]  [COLOR gray](pozastaveno, {} ve frontě)[/COLOR]'
+                         .format(queued), 'download_resume'))
+    elif queued:
+        controls.append(('[COLOR lime]Pokračovat ve stahování[/COLOR]  [COLOR gray]({} ve frontě)[/COLOR]'.format(queued),
+                         'download_resume'))
+    controls.append(('[COLOR gray]Zrušit stahování[/COLOR]', 'download_cancel'))
+    for label, action in controls:
+        li = xbmcgui.ListItem(label)
+        li.setArt({'icon': ICON, 'thumb': ICON})
+        xbmcplugin.addDirectoryItem(_handle, get_url(action=action), li, False)
+    xbmcplugin.endOfDirectory(_handle, cacheToDisc=False)
 
 
 # ---------------------------------------------------------------------------
@@ -1169,6 +1185,18 @@ def router(paramstring):
         download_page(params['url'])
     elif action == 'download_cancel':
         downloader().cancel()
+        xbmc.executebuiltin('Container.Refresh')
+    elif action == 'download_pause':
+        downloader().pause()
+        xbmc.executebuiltin('Container.Refresh')
+    elif action == 'download_resume':
+        xbmc.executebuiltin('Container.Refresh')
+        downloader().resume()
+    elif action == 'download_toggle':
+        if download_state() == 'running':
+            downloader().pause()
+        else:
+            downloader().resume()
     else:
         log('Neznámá akce: {}'.format(action), xbmc.LOGWARNING)
         menu()

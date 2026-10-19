@@ -17,6 +17,44 @@ CHUNK = 1024 * 1024
 WINDOW = xbmcgui.Window(10000)
 PROP_RUNNING = 'plugin.video.freevideo.dl_running'
 PROP_CANCEL = 'plugin.video.freevideo.dl_cancel'
+PROP_PAUSE = 'plugin.video.freevideo.dl_pause'
+
+
+class PartFile:
+    """Rozstažený soubor .part; lokální soubory umí pokračovat (append), síťové začnou znovu."""
+
+    def __init__(self, path, resume=False):
+        self.path = path
+        self.local = '://' not in path
+        self.resumed = bool(resume and self.local and os.path.exists(path))
+        if self.local:
+            self.f = open(path, 'ab' if self.resumed else 'wb')
+        else:
+            self.f = xbmcvfs.File(path, 'wb')
+
+    def size(self):
+        return os.path.getsize(self.path) if self.local and os.path.exists(self.path) else 0
+
+    def truncate(self):
+        if self.local:
+            self.f.seek(0)
+            self.f.truncate()
+
+    def write(self, data):
+        if self.local:
+            self.f.write(data)
+            return True
+        return self.f.write(bytearray(data))
+
+    def close(self):
+        self.f.close()
+
+
+def download_state():
+    """'running', 'paused' nebo '' (nic neběží)."""
+    if WINDOW.getProperty(PROP_RUNNING) != '1':
+        return ''
+    return 'paused' if WINDOW.getProperty(PROP_PAUSE) == '1' else 'running'
 
 
 class SkipVideo(Exception):
@@ -114,18 +152,66 @@ class Downloader:
             return
         self.run()
 
+    def queued(self):
+        return len(self._load())
+
     def cancel(self):
+        WINDOW.clearProperty(PROP_PAUSE)
         if WINDOW.getProperty(PROP_RUNNING) == '1':
             WINDOW.setProperty(PROP_CANCEL, '1')
             self._save([])
             self.notify('Stahování se ruší...', xbmcgui.NOTIFICATION_INFO)
-        else:
+        elif self._load():
+            self._cleanup_parts()
             self._save([])
+            self.notify('Fronta stahování zrušena.', xbmcgui.NOTIFICATION_INFO)
+        else:
             self.notify('Nic se nestahuje.', xbmcgui.NOTIFICATION_INFO)
+
+    def pause(self):
+        if WINDOW.getProperty(PROP_RUNNING) != '1':
+            self.notify('Nic se nestahuje.', xbmcgui.NOTIFICATION_INFO)
+            return
+        WINDOW.setProperty(PROP_PAUSE, '1')
+        self.notify('Stahování pozastaveno.', xbmcgui.NOTIFICATION_INFO)
+
+    def resume(self):
+        WINDOW.clearProperty(PROP_PAUSE)
+        if WINDOW.getProperty(PROP_RUNNING) == '1':
+            self.notify('Stahování pokračuje.', xbmcgui.NOTIFICATION_INFO)
+        elif self._load():
+            # např. po restartu Kodi: fronta zůstala uložená, rozstažené soubory navážou
+            self.run()
+        else:
+            self.notify('Fronta stahování je prázdná.', xbmcgui.NOTIFICATION_INFO)
+
+    def _cleanup_parts(self):
+        folder = self.folder(ask=False)
+        if not folder or '://' in folder or not os.path.isdir(folder):
+            return
+        for name in os.listdir(folder):
+            if name.endswith('.part') or name.endswith('.part.idx'):
+                try:
+                    os.remove(os.path.join(folder, name))
+                except OSError:
+                    pass
+
+    def _wait_if_paused(self, monitor, progress, heading, text, pct=0):
+        """Čeká, dokud je stahování pozastavené. Vrací False, když se mezitím zrušilo."""
+        if WINDOW.getProperty(PROP_PAUSE) != '1':
+            return not self._cancelled(monitor)
+        while WINDOW.getProperty(PROP_PAUSE) == '1':
+            if self._cancelled(monitor):
+                return False
+            progress.update(pct, heading + ' – POZASTAVENO', text)
+            if monitor.waitForAbort(1):
+                return False
+        return not self._cancelled(monitor)
 
     def run(self):
         WINDOW.setProperty(PROP_RUNNING, '1')
         WINDOW.clearProperty(PROP_CANCEL)
+        WINDOW.clearProperty(PROP_PAUSE)
         monitor = xbmc.Monitor()
         progress = xbmcgui.DialogProgressBG()
         progress.create('Video FREE', 'Připravuji stahování...')
@@ -138,8 +224,13 @@ class Downloader:
                 item = queue[0]
                 total = done + failed + skipped + len(queue)
                 heading = 'Stahuji %d/%d' % (done + failed + skipped + 1, total)
+                if not self._wait_if_paused(monitor, progress, heading, item.get('title', '')):
+                    break
                 try:
-                    if self._download(item, progress, heading, monitor):
+                    ok = self._download(item, progress, heading, monitor)
+                    if monitor.abortRequested():
+                        break  # Kodi se vypíná: položka zůstane ve frontě a po restartu se naváže
+                    if ok:
                         done += 1
                     else:
                         failed += 1
@@ -154,6 +245,7 @@ class Downloader:
         finally:
             progress.close()
             WINDOW.clearProperty(PROP_RUNNING)
+            WINDOW.clearProperty(PROP_PAUSE)
             cancelled = WINDOW.getProperty(PROP_CANCEL) == '1'
             WINDOW.clearProperty(PROP_CANCEL)
         if cancelled:
@@ -190,7 +282,9 @@ class Downloader:
         progress.update(0, heading, title)
         self.log('Stahuji (%s, %dp) %s -> %s' % (stream['type'], stream['height'], stream['url'], target))
         ok = False
-        f = xbmcvfs.File(part, 'wb')
+        f = PartFile(part, resume=True)
+        if f.resumed:
+            self.log('Navazuji na rozstažený soubor (%d B)' % f.size())
         try:
             if hls:
                 ok = self._write_hls(f, part, playlist, stream, progress, heading, title, monitor)
@@ -198,36 +292,65 @@ class Downloader:
                 ok = self._write_mp4(f, part, stream, progress, heading, title, monitor)
         finally:
             f.close()
-            if not ok:
+            if not ok and not monitor.abortRequested():
                 xbmcvfs.delete(part)
+                xbmcvfs.delete(part + '.idx')
         if not ok:
             return False
+        xbmcvfs.delete(part + '.idx')
         if not xbmcvfs.rename(part, target):
             raise IOError('nelze přejmenovat %s' % part)
         return True
 
     def _write(self, f, part, data):
-        if not f.write(bytearray(data)):
+        if not f.write(data):
             raise IOError('nelze zapisovat do %s' % part)
 
-    def _write_mp4(self, f, part, stream, progress, heading, title, monitor):
-        resp = requests.get(stream['url'], stream=True, timeout=common.TIMEOUT, headers=stream.get('headers'))
-        try:
-            resp.raise_for_status()
-            size = int(resp.headers.get('Content-Length') or 0)
+    def _open_range(self, stream, f, got):
+        """Otevře MP4 od bajtu got; když server Range neumí, začne znovu od nuly."""
+        headers = dict(stream.get('headers') or {})
+        if got:
+            headers['Range'] = 'bytes=%d-' % got
+        resp = requests.get(stream['url'], stream=True, timeout=common.TIMEOUT, headers=headers)
+        resp.raise_for_status()
+        if got and resp.status_code != 206:
+            self.log('Server neumí navázat stahování, začínám znovu')
+            f.truncate()
             got = 0
+        length = int(resp.headers.get('Content-Length') or 0)
+        size = got + length if length else 0
+        return resp, got, size
+
+    def _write_mp4(self, f, part, stream, progress, heading, title, monitor):
+        got = f.size() if f.resumed else 0
+        resp, got, size = self._open_range(stream, f, got)
+        try:
             last = 0
-            for chunk in resp.iter_content(CHUNK):
-                if self._cancelled(monitor):
+            while True:
+                paused = False
+                for chunk in resp.iter_content(CHUNK):
+                    if self._cancelled(monitor):
+                        return False
+                    if WINDOW.getProperty(PROP_PAUSE) == '1':
+                        paused = True
+                        break
+                    if not chunk:
+                        continue
+                    self._write(f, part, chunk)
+                    got += len(chunk)
+                    if time.time() - last > 1:
+                        last = time.time()
+                        pct = int(got * 100 / size) if size else 0
+                        progress.update(pct, heading, '%s  (%d / %d MB)' % (title, got >> 20, size >> 20))
+                if not paused:
+                    break
+                # pozastaveno: spojení zavřít, počkat a pak navázat od staženého místa
+                resp.close()
+                pct = int(got * 100 / size) if size else 0
+                if not self._wait_if_paused(monitor, progress, heading, '%s  (%d / %d MB)' % (
+                        title, got >> 20, size >> 20), pct):
                     return False
-                if not chunk:
-                    continue
-                self._write(f, part, chunk)
-                got += len(chunk)
-                if time.time() - last > 1:
-                    last = time.time()
-                    pct = int(got * 100 / size) if size else 0
-                    progress.update(pct, heading, '%s  (%d / %d MB)' % (title, got >> 20, size >> 20))
+                resp, got, size = self._open_range(stream, f, got)
             if size and got < size:
                 raise IOError('stahování přerušeno (%d z %d B)' % (got, size))
             return True
@@ -267,16 +390,32 @@ class Downloader:
 
     def _write_hls(self, f, part, playlist, stream, progress, heading, title, monitor):
         headers = stream.get('headers')
-        if playlist['init']:
-            self._write(f, part, self._get(playlist['init'], headers))
+        done_segs = 0
+        if f.resumed:
+            try:
+                with open(part + '.idx', 'r') as idx:
+                    done_segs = int(idx.read().strip() or 0)
+            except (OSError, ValueError):
+                f.truncate()
+        if not done_segs:
+            f.truncate()
+            if playlist['init']:
+                self._write(f, part, self._get(playlist['init'], headers))
         segs = playlist['segments']
-        got = 0
+        got = f.size()
         last = 0
         for i, seg in enumerate(segs):
-            if self._cancelled(monitor):
+            if i < done_segs:
+                continue  # už staženo před pozastavením / restartem
+            pct = int(i * 100 / len(segs))
+            if not self._wait_if_paused(monitor, progress, heading, '%s  (%d / %d částí)' % (title, i, len(segs)), pct):
                 return False
             data = self._get(seg, headers)
             self._write(f, part, data)
+            if f.local:
+                f.f.flush()
+                with open(part + '.idx', 'w') as idx:
+                    idx.write(str(i + 1))
             got += len(data)
             if time.time() - last > 1 or i == len(segs) - 1:
                 last = time.time()

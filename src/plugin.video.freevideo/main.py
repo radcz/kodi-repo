@@ -13,7 +13,7 @@ import xbmcplugin
 import xbmcvfs
 
 from resources.lib import common, sites
-from resources.lib.downloader import Downloader
+from resources.lib.downloader import Downloader, download_state
 
 ADDON = xbmcaddon.Addon()
 ADDON_ID = ADDON.getAddonInfo('id')
@@ -90,8 +90,24 @@ def main_menu():
         li = xbmcgui.ListItem('Stažená videa')
         li.setArt({'icon': ICON, 'thumb': ICON, 'fanart': FANART})
         xbmcplugin.addDirectoryItem(HANDLE, folder, li, isFolder=True)
-    add_action('[COLOR gray]Zrušit stahování[/COLOR]', {'action': 'download_cancel'})
+    add_download_controls()
     end_dir()
+
+
+def add_download_controls():
+    """Pozastavit / Pokračovat / Zrušit podle stavu stahování."""
+    state = download_state()
+    queued = downloader().queued()
+    if state == 'running':
+        add_action('[COLOR yellow]Pozastavit stahování[/COLOR]  [COLOR gray](%d ve frontě)[/COLOR]' % queued,
+                   {'action': 'download_pause'})
+    elif state == 'paused':
+        add_action('[COLOR lime]Pokračovat ve stahování[/COLOR]  [COLOR gray](pozastaveno, %d ve frontě)[/COLOR]'
+                   % queued, {'action': 'download_resume'})
+    elif queued:
+        add_action('[COLOR lime]Pokračovat ve stahování[/COLOR]  [COLOR gray](%d ve frontě)[/COLOR]' % queued,
+                   {'action': 'download_resume'})
+    add_action('[COLOR gray]Zrušit stahování[/COLOR]', {'action': 'download_cancel'})
 
 
 def lesbian_all():
@@ -155,6 +171,8 @@ def list_videos(site, url, page_no=1):
                                                      title=v['title'])),
             ('Stáhnout více z této stránky...', 'RunPlugin(%s)' % build_url(**multi_q)),
             ('Stáhnout celou stránku', 'RunPlugin(%s)' % build_url(**page_q)),
+            ('Pozastavit / pokračovat ve stahování', 'RunPlugin(%s)' % build_url(action='download_toggle')),
+            ('Zrušit stahování', 'RunPlugin(%s)' % build_url(action='download_cancel')),
         ])
         xbmcplugin.addDirectoryItem(HANDLE, build_url(action='play', site=site.ID, url=v['url']), li,
                                     isFolder=False)
@@ -355,6 +373,18 @@ def router(paramstring):
         download_page(site, params['url'])
     elif action == 'download_cancel':
         downloader().cancel()
+        xbmc.executebuiltin('Container.Refresh')
+    elif action == 'download_pause':
+        downloader().pause()
+        xbmc.executebuiltin('Container.Refresh')
+    elif action == 'download_resume':
+        xbmc.executebuiltin('Container.Refresh')
+        downloader().resume()
+    elif action == 'download_toggle':
+        if download_state() == 'running':
+            downloader().pause()
+        else:
+            downloader().resume()
     elif action == 'play':
         play(site, params['url'], params.get('ask') == '1')
     else:

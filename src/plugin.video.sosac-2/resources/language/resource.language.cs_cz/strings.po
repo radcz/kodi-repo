@@ -1540,3 +1540,31 @@ msgstr "Video není ve 4K. Stáhnout ho v nejlepší dostupné kvalitě?"
 msgctxt "#30453"
 msgid "Skipped (no 4K): %s"
 msgstr "Přeskočeno (bez 4K): %s"
+
+msgctxt "#30454"
+msgid "Download paused"
+msgstr "Stahování pozastaveno"
+
+msgctxt "#30455"
+msgid "Pause download"
+msgstr "Pozastavit stahování"
+
+msgctxt "#30456"
+msgid "Resume download"
+msgstr "Pokračovat ve stahování"
+
+msgctxt "#30457"
+msgid "paused"
+msgstr "pozastaveno"
+
+msgctxt "#30458"
+msgid "failed – can be resumed"
+msgstr "chyba – lze pokračovat"
+
+msgctxt "#30459"
+msgid "Pause all downloads"
+msgstr "Pozastavit všechna stahování"
+
+msgctxt "#30460"
+msgid "Resume all downloads"
+msgstr "Pokračovat ve všech stahováních"

@@ -41,6 +41,10 @@ EXTRA = {
     'repository.sosacRepo': os.path.join(WORK, 'repozitare', 'repository.sosacRepo'),
     'repository.prehraj.to': os.path.join(WORK, 'repozitare', 'repository.prehraj.to'),
 }
+# instalátor „vše v jednom“: přibalí aktuální ZIPy repozitářů a z radcz Repository nainstaluje doplňky
+INSTALLER = os.path.join(WORK, 'instalator', 'src', 'plugin.program.radcz.instalator')
+INSTALLER_REPOS = ['repository.radek', 'repository.sosacRepo', 'repository.prehraj.to', 'repository.dobbelina',
+                   'repository.slyguy']
 SKIP_DIRS = {'__pycache__', '.git', 'tests', 'addon_data', 'userdata'}
 # session.json apod. ukládala původní verze Prehraj.to do složky doplňku (přihlášení!) - nikdy nebalit
 SKIP_FILES = {'.DS_Store', 'settings.xml.bak', 'session.json', 'history.txt', 'resume.json', 'subtitles.txt',
@@ -107,6 +111,9 @@ def copy_sources():
         if addon_id.startswith('plugin.') or addon_id == 'repository.radek':
             shutil.copytree(src, os.path.join(dst_root, addon_id),
                             ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '*.bak', '.DS_Store', 'tests'))
+    if os.path.isdir(INSTALLER):
+        shutil.copytree(INSTALLER, os.path.join(dst_root, 'plugin.program.radcz.instalator'),
+                        ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '.DS_Store', 'zips'))
 
 
 def main():
@@ -131,6 +138,22 @@ def main():
         flat.append(os.path.basename(zip_path))
         print('  %-26s %-9s (jen ZIP)' % (addon_id, version))
 
+    installer_zip = None
+    if os.path.isdir(INSTALLER):
+        zips_dir = os.path.join(INSTALLER, 'resources', 'zips')
+        if os.path.isdir(zips_dir):
+            shutil.rmtree(zips_dir)
+        os.makedirs(zips_dir)
+        for repo_id in INSTALLER_REPOS:
+            for name in flat:
+                if name.startswith(repo_id + '-'):
+                    shutil.copy2(os.path.join(REPO, name), zips_dir)
+        zip_path, version = make_zip(INSTALLER, REPO)
+        installer_zip = os.path.basename(zip_path)
+        flat.append(installer_zip)
+        print('  %-26s %-9s (instalátor, přibaleno %d repozitářů)' % (
+            'plugin.program.radcz.inst.', version, len(os.listdir(zips_dir))))
+
     data = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<addons>\n' +
             '\n\n'.join(xml_parts) + '\n</addons>\n').encode('utf-8')
     ET.fromstring(data)  # kontrola platnosti XML
@@ -141,13 +164,14 @@ def main():
 
     # Stránka pro zdroj v Kodi: Kodi z HTML bere jen odkazy, jejichž text je přesně
     # název souboru, proto jsou ZIPy v kořeni a odkazy bez dalšího textu.
-    first = ['repository.radek-%s.zip' % REPO_VERSION]
+    first = ([installer_zip] if installer_zip else []) + ['repository.radek-%s.zip' % REPO_VERSION]
     order = first + sorted(x for x in flat if x not in first)
     links = '\n'.join('<a href="%s">%s</a><br>' % (n, n) for n in order)
     with open(os.path.join(REPO, 'index.html'), 'w', encoding='utf-8') as f:
         f.write('<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>radcz Kodi repo</title></head>\n'
                 '<body>\n<h1>radcz Kodi repozitář</h1>\n<p>V Kodi přidejte zdroj https://radcz.github.io/kodi-repo/ '
-                'a nainstalujte ze ZIPu nejdřív repository.radek.</p>\n%s\n</body></html>\n' % links)
+                'a nainstalujte ze ZIPu plugin.program.radcz.instalator (nainstaluje vše) '
+                'nebo jen repository.radek.</p>\n%s\n</body></html>\n' % links)
     open(os.path.join(REPO, '.nojekyll'), 'w').close()
     copy_sources()
     print('Hotovo: %d ZIPů v kořeni, addons.xml s %d doplňky.' % (len(flat), len(xml_parts)))

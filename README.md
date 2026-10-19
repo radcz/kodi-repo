@@ -5,13 +5,27 @@ Veřejný repozitář doplňků pro [Kodi](https://kodi.tv) 19, 20 a 21. Funguje
 | Doplněk | Verze | Popis |
 |---|---|---|
 | `repository.radek` | 1.0.3 | tento repozitář, přes který se doplňky instalují a aktualizují |
-| `plugin.video.sosac-2` | 3.1.2.6 | Sosac.TV s opravami, stahováním offline a průběhem stahování |
-| `plugin.video.prehrajto` | 2.0.5.2 | Prehraj.to česky: hledání s náhledy, stahování na pozadí jen ve 4K/2K, celá stránka najednou (vyžaduje Premium) |
-| `plugin.video.freevideo` | 1.6.0 | Video FREE: 14 webů, lesbické výpisy vždy nahoře, stahování celé stránky, jen přesně 1080p |
+| `plugin.video.sosac-2` | 3.1.2.7 | Sosac.TV s opravami, stahováním offline ve 4K; stahování jde pozastavit, pokračovat (i po restartu Kodi) a zrušit |
+| `plugin.video.prehrajto` | 2.0.5.3 | Prehraj.to česky: hledání s náhledy, stahování jen ve 4K/2K, celá stránka najednou; stahování jde pozastavit, pokračovat (i po restartu Kodi) a zrušit (vyžaduje Premium) |
+| `plugin.video.freevideo` | 1.7.0 | Video FREE: 14 webů, lesbické výpisy vždy nahoře, stahování celé stránky, jen přesně 1080p; stahování jde pozastavit, pokračovat (i po restartu Kodi) a zrušit |
 | `repository.dobbelina` | 1.0.4.1 | repozitář Dobbelina (Cumination) s vlastní ikonou |
 | `repository.slyguy` | 0.0.9 | repozitář SlyGuy, z něj se instaluje HBO Max (viz níže) |
 
 Ke stažení jsou také `repository.sosacRepo` a `repository.prehraj.to`.
+
+## Instalace jedním ZIPem (nainstaluje všechno)
+
+**Stáhnout: [plugin.program.radcz.instalator-1.0.0.zip](https://radcz.github.io/kodi-repo/plugin.program.radcz.instalator-1.0.0.zip)**
+
+1. Kodi → **Nastavení → Systém → Doplňky** → zapnout **Neznámé zdroje**.
+2. **Doplňky → ikona otevřené krabice → Instalovat ze ZIP souboru** → `plugin.program.radcz.instalator-1.0.0.zip`
+   (na Apple TV / iPadu nejdřív ve Správci souborů přidejte zdroj `https://radcz.github.io/kodi-repo/` a ZIP vyberte z něj).
+3. Instalátor se sám spustí a zeptá **„Nainstalovat vše najednou?“** → **Ano**. Přidá repozitáře radcz, Sosac, Prehraj.to,
+   Dobbelina a SlyGuy (HBO Max) a nainstaluje **Sosac.TV, Prehraj.to (česky) a Video FREE** i s knihovnami.
+   Kodi se může u každého doplňku zeptat „Nainstalovat?“ → **Ano**.
+4. Restartujte Kodi a v nastavení Sosac.TV a Prehraj.to zadejte přihlášení.
+
+Instalátor jde kdykoli spustit znovu (**Doplňky → Programy → radcz instalátor**), doinstaluje, co chybí.
 
 **Adresa zdroje pro Kodi: `https://radcz.github.io/kodi-repo/`**
 
