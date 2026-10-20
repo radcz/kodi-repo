@@ -14,6 +14,7 @@ import xbmcvfs
 
 from resources.lib import common, sites
 from resources.lib.downloader import Downloader, download_state
+from resources.lib.favorites import Favorites, stars_label
 
 ADDON = xbmcaddon.Addon()
 ADDON_ID = ADDON.getAddonInfo('id')
@@ -79,9 +80,15 @@ def downloader():
     return Downloader(ADDON, PROFILE, log, notify)
 
 
+def favorites():
+    return Favorites(PROFILE)
+
+
 # --- obrazovky ---
 
 def main_menu():
+    total = sum(favorites().counts().values())
+    add_dir('[COLOR gold][B]★ Oblíbené[/B][/COLOR]  [COLOR gray](%d)[/COLOR]' % total, {'action': 'fav_menu'}, thumb=ICON)
     add_dir(LES % '[B]Lesbičky – všechny weby[/B]', {'action': 'lesbian_all'}, thumb=ICON)
     for site in sites.SITES:
         add_dir(site.NAME, {'action': 'site', 'site': site.ID}, thumb=site_icon(site))
@@ -150,32 +157,12 @@ def list_videos(site, url, page_no=1):
     if videos:
         add_action('[COLOR deepskyblue]Stáhnout celou stránku (%d videí)[/COLOR]' % len(videos), page_q)
         add_action('[COLOR deepskyblue]Stáhnout více videí z této stránky...[/COLOR]', multi_q)
+    fav = favorites().stars_map()
     for v in videos:
-        label = v['title']
-        tags = [t for t in (v.get('quality'), 'CZ' if v.get('cz') else '') if t]
-        if tags:
-            label += '  [COLOR gray][%s][/COLOR]' % ', '.join(tags)
-        li = xbmcgui.ListItem(label)
-        li.setArt({'thumb': v['thumb'], 'icon': v['thumb'], 'poster': v['thumb'],
-                   'fanart': v['thumb'] or FANART})
-        tag = li.getVideoInfoTag()
-        tag.setTitle(v['title'])
-        tag.setMediaType('video')
-        if v.get('duration'):
-            tag.setDuration(v['duration'])
-        li.setProperty('IsPlayable', 'true')
-        li.addContextMenuItems([
-            ('Přehrát ve vybrané kvalitě',
-             'PlayMedia(%s)' % build_url(action='play', site=site.ID, url=v['url'], ask='1')),
-            ('Stáhnout', 'RunPlugin(%s)' % build_url(action='download', site=site.ID, url=v['url'],
-                                                     title=v['title'])),
+        add_video_item(site.ID, v, fav.get(v['url'], 0), [
             ('Stáhnout více z této stránky...', 'RunPlugin(%s)' % build_url(**multi_q)),
             ('Stáhnout celou stránku', 'RunPlugin(%s)' % build_url(**page_q)),
-            ('Pozastavit / pokračovat ve stahování', 'RunPlugin(%s)' % build_url(action='download_toggle')),
-            ('Zrušit stahování', 'RunPlugin(%s)' % build_url(action='download_cancel')),
         ])
-        xbmcplugin.addDirectoryItem(HANDLE, build_url(action='play', site=site.ID, url=v['url']), li,
-                                    isFolder=False)
     if next_url:
         nxt = page_no + 1
         label = '[B]Další >>[/B]  (strana %d%s)' % (nxt, ' z %d' % pages if pages else '')
@@ -183,6 +170,102 @@ def list_videos(site, url, page_no=1):
     xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
     xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DURATION)
     end_dir('videos', cache=False)
+
+
+def add_video_item(site_id, v, stars=0, extra_ctx=None, show_site=False):
+    """Jedno video ve výpisu (běžný výpis i oblíbené)."""
+    label = v['title']
+    if stars:
+        label = stars_label(stars) + '  ' + label
+    tags = [t for t in (v.get('quality'), 'CZ' if v.get('cz') else '') if t]
+    if show_site:
+        tags.insert(0, sites.get(site_id).NAME)
+    if tags:
+        label += '  [COLOR gray][%s][/COLOR]' % ', '.join(tags)
+    li = xbmcgui.ListItem(label)
+    thumb = v.get('thumb') or ''
+    li.setArt({'thumb': thumb, 'icon': thumb, 'poster': thumb, 'fanart': thumb or FANART})
+    tag = li.getVideoInfoTag()
+    tag.setTitle(v['title'])
+    tag.setMediaType('video')
+    if v.get('duration'):
+        tag.setDuration(int(v['duration']))
+    if stars:
+        tag.setUserRating(int(stars))
+    li.setProperty('IsPlayable', 'true')
+    fav_q = {'action': 'fav_set', 'site': site_id, 'url': v['url'], 'title': v['title'], 'thumb': thumb,
+             'duration': v.get('duration') or 0, 'quality': v.get('quality') or ''}
+    li.addContextMenuItems([
+        ('[COLOR gold]Oblíbené – hvězdičky...[/COLOR]', 'RunPlugin(%s)' % build_url(**fav_q)),
+        ('Přehrát ve vybrané kvalitě', 'PlayMedia(%s)' % build_url(action='play', site=site_id, url=v['url'], ask='1')),
+        ('Stáhnout', 'RunPlugin(%s)' % build_url(action='download', site=site_id, url=v['url'], title=v['title'])),
+    ] + (extra_ctx or []) + [
+        ('Pozastavit / pokračovat ve stahování', 'RunPlugin(%s)' % build_url(action='download_toggle')),
+        ('Zrušit stahování', 'RunPlugin(%s)' % build_url(action='download_cancel')),
+    ])
+    xbmcplugin.addDirectoryItem(HANDLE, build_url(action='play', site=site_id, url=v['url']), li, isFolder=False)
+
+
+# --- oblíbené ---
+
+def fav_menu():
+    counts = favorites().counts()
+    total = sum(counts.values())
+    add_dir('[B]Všechny oblíbené[/B]  [COLOR gray](%d, nejlepší nahoře)[/COLOR]' % total,
+            {'action': 'fav_list', 'stars': 0}, thumb=ICON)
+    for n in (3, 2, 1):
+        add_dir('%s  [COLOR gray](%d)[/COLOR]' % (stars_label(n), counts[n]), {'action': 'fav_list', 'stars': n},
+                thumb=ICON)
+    end_dir()
+
+
+def fav_list(stars=0):
+    items = favorites().all(int(stars) or None)
+    if not items:
+        notify('Zatím tu nic není. Video přidáte v kontextovém menu: Oblíbené – hvězdičky...',
+               xbmcgui.NOTIFICATION_INFO)
+    else:
+        add_action('[COLOR deepskyblue]Stáhnout všechna tato videa (%d)[/COLOR]' % len(items),
+                   {'action': 'fav_download', 'stars': stars})
+    for v in items:
+        add_video_item(v.get('site') or 'freevideo', v, v.get('stars', 0), show_site=True)
+    xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+    xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_VIDEO_USER_RATING)
+    xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DURATION)
+    end_dir('videos', cache=False)
+
+
+def fav_set(params):
+    fav = favorites()
+    current = fav.stars_of(params['url'])
+    options = ['%s  1 hvězdička' % stars_label(1), '%s  2 hvězdičky' % stars_label(2),
+               '%s  3 hvězdičky' % stars_label(3)]
+    if current:
+        options.append('[COLOR red]Odebrat z oblíbených[/COLOR]')
+    sel = xbmcgui.Dialog().select('Oblíbené: %s' % params.get('title', ''), options,
+                                  preselect=current - 1 if current else -1)
+    if sel < 0:
+        return
+    stars = 0 if sel == 3 else sel + 1
+    video = {'site': params.get('site'), 'url': params['url'], 'title': params.get('title', ''),
+             'thumb': params.get('thumb', ''), 'quality': params.get('quality', '')}
+    try:
+        video['duration'] = int(float(params.get('duration') or 0))
+    except ValueError:
+        pass
+    fav.set(video, stars)
+    notify(('Oblíbené: %s' % ('★' * stars)) if stars else 'Odebráno z oblíbených', xbmcgui.NOTIFICATION_INFO)
+    xbmc.executebuiltin('Container.Refresh')
+
+
+def fav_download(stars=0):
+    items = favorites().all(int(stars) or None)
+    if not items:
+        return
+    if not xbmcgui.Dialog().yesno(ADDON_NAME, 'Stáhnout všech %d oblíbených videí?' % len(items)):
+        return
+    downloader().enqueue([{'site': v.get('site') or 'freevideo', 'url': v['url'], 'title': v['title']}
+                          for v in items])
 
 
 def list_categories(site, url):
@@ -361,6 +444,14 @@ def router(paramstring):
         search_menu(site)
     elif action == 'search':
         search(site, params.get('q'), params.get('les') == '1')
+    elif action == 'fav_menu':
+        fav_menu()
+    elif action == 'fav_list':
+        fav_list(params.get('stars', 0))
+    elif action == 'fav_set':
+        fav_set(params)
+    elif action == 'fav_download':
+        fav_download(params.get('stars', 0))
     elif action == 'lesbian_all':
         lesbian_all()
     elif action == 'history_del':

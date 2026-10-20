@@ -21,7 +21,7 @@ import zipfile
 from xml.etree import ElementTree as ET
 
 REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-WORK = os.path.normpath(os.path.join(REPO, '..', '..'))          # ~/Desktop/KODI -SOSAČ
+WORK = os.path.normpath(os.path.join(REPO, '..', '..'))          # složka „KODI -SOSAČ“ (kdekoli)
 URL = 'https://raw.githubusercontent.com/radcz/kodi-repo/main/'
 REPO_VERSION = '1.0.3'
 
