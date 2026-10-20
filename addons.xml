@@ -20,7 +20,7 @@
     </extension>
 </addon>
 
-<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.8" provider-name="zak">
+<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.9" provider-name="zak">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
 		<import addon="script.module.six" version="1.11.0"/>
@@ -46,6 +46,8 @@
 			<fanart>fanart.png</fanart>
         </assets>
         <news>
+3.1.2.9
+- V seznamech je u každého videa vidět kvalita (4K, 1080p, 720p, 480p) barevně za jazykem
 3.1.2.8
 - Místní profily: jeden účet Sosac, ale každý profil má vlastní zhlédnuté a pozice
 - Hlavní profil je sdílený se sosac.tv, další profily si pamatují jen v daném Kodi

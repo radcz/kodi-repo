@@ -587,6 +587,9 @@ def set_common_properties(item, li, letype = ""):
         langue = ""
         debug("set_common_properties langue error %s"%e, 2)
 
+    q_label = quality_label(item.get("q"))
+    if q_label :
+        langue = (langue + "  " + q_label).strip()
     li.setProperty('langue',langue)
 
     
@@ -774,6 +777,18 @@ def downdelete():
     n = delete_path(path)
     notify(translate(30402), tr(30426, n), time=4000)
     xbmc.executebuiltin('Container.Refresh')
+
+# kvalita v řádku seznamu (pole "q" ze serveru), barevně podle rozlišení
+QUALITY_LABELS = {"uhd hdr": ("4K HDR", "gold"), "hdr": ("4K HDR", "gold"), "uhd": ("4K", "gold"),
+                  "fhd": ("1080p", "lime"), "hd": ("720p", "white"), "sd": ("480p", "grey"),
+                  "kinorip": ("KINORIP", "grey"), "tvrip": ("TVRIP", "grey")}
+
+def quality_label(q) :
+    q = str(q or "").strip().lower()
+    if not q :
+        return ""
+    text, color = QUALITY_LABELS.get(q, (q.upper(), "white"))
+    return "[COLOR %s][B]%s[/B][/COLOR]" % (color, text)
 
 def show_plug_list(letype, epi_id, items, start=None, stat=None):
     global SOSAC_IMAGE
