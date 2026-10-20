@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-import sys, os, requests, json
+import sys, os, requests, json, time
 from hashlib import md5
 import urllib.parse
 import xbmcaddon
@@ -626,7 +626,112 @@ def set_sosac_guide(day,page) :
     debug("set_sosac_guide stream_url %s"%stream_url,2)
     return stream_url
 
+############################################
+# Místní profily: jeden účet Sosac, ale víc diváků.
+# Profil "main" ukládá zhlédnutí na server Sosacu (sdílené se sosac.tv a ostatními
+# zařízeními). Ostatní profily si zhlédnutí a pozice "pokračovat od" ukládají jen
+# v tomto Kodi (soubor watch_<id>.json), takže se navzájem nepřepisují.
+MAIN_PROFILE = "main"
+PROFILES_FILE = os.path.join(profilepath, "profiles.json")
+
+def _json_load(path, default) :
+    try :
+        with open(path, "r", encoding="utf-8") as f :
+            return json.load(f)
+    except Exception :
+        return default
+
+def _json_save(path, data) :
+    try :
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f :
+            json.dump(data, f)
+        os.replace(tmp, path)
+    except Exception as e :
+        debug("json save error %s %s"%(path, e), 2)
+
+def load_profiles() :
+    data = _json_load(PROFILES_FILE, None)
+    if not isinstance(data, dict) or not data.get("profiles") :
+        data = {"active": MAIN_PROFILE,
+                "profiles": [{"id": MAIN_PROFILE, "name": translate(30461)},
+                             {"id": "p2", "name": translate(30462)}]}
+        _json_save(PROFILES_FILE, data)
+    return data
+
+def save_profiles(data) :
+    _json_save(PROFILES_FILE, data)
+
+def active_profile() :
+    data = load_profiles()
+    for p in data["profiles"] :
+        if p["id"] == data.get("active") :
+            return p
+    return data["profiles"][0]
+
+def is_local_profile() :
+    return active_profile()["id"] != MAIN_PROFILE
+
+def _watch_file(pid=None) :
+    return os.path.join(profilepath, "watch_%s.json" % (pid or active_profile()["id"]))
+
+def local_watch_all(pid=None) :
+    data = _json_load(_watch_file(pid), {})
+    data.setdefault("movies", {}); data.setdefault("episodes", {})
+    return data
+
+def local_watch_set(kind, item_id, w=None, meta=None) :
+    # kind = "movies" / "episodes"; ukládá pozici a údaje pro výpis Rozkoukané/Historie
+    kind = "movies" if kind == "movies" else "episodes"
+    data = local_watch_all()
+    entry = data[kind].get(str(item_id), {"w": 0})
+    if w is not None :
+        entry["w"] = int(w)
+        entry["t"] = int(time.time())
+    if meta :
+        keep = ("_id", "l", "n", "ne", "dl", "i", "ie", "b", "p", "y", "g", "ep", "s", "d", "q", "c", "m", "r", "o", "oi", "f", "h", "e", "k", "t", "mp", "cp")
+        entry["meta"] = dict((k, v) for k, v in meta.items() if k in keep)
+        if meta.get("dl") : entry["dl"] = meta["dl"]
+    data[kind][str(item_id)] = entry
+    _json_save(_watch_file(), data)
+
+def _kind_for_url(url) :
+    path = url.split("?")[0]
+    if "/tv/program" in path : return None
+    if "/episodes/" in path : return "episodes"
+    if "/serials/lists" in path or "/serials/simple-search" in path or "/serials/advanced-search" in path : return "serials"
+    if "/serials/" in path : return "serial-detail"
+    if "/movies/" in path : return "movies"
+    return None
+
+def apply_local_watch(obj, url) :
+    """Ve odpovědi serveru nahradí pole "w" (zhlédnuto/pozice) hodnotami místního profilu."""
+    store = local_watch_all()
+    child_kind = {"movie": "movies", "episode": "episodes", "serial": "serials", "info": "serials"}
+    def walk(o, kind) :
+        if isinstance(o, list) :
+            for x in o : walk(x, kind)
+        elif isinstance(o, dict) :
+            if "_id" in o and "w" in o and kind in ("movies", "episodes", "serials") :
+                k = "episodes" if (kind == "episodes" or "ep" in o) else kind
+                if k == "serials" :
+                    o["w"] = 0
+                else :
+                    o["w"] = store[k].get(str(o["_id"]), {}).get("w", 0)
+            for key, val in o.items() :
+                if isinstance(val, (dict, list)) :
+                    sub = child_kind.get(key)
+                    if sub is None :
+                        sub = "episodes" if kind in ("serial-detail", "serials") else kind
+                    walk(val, sub)
+    walk(obj, _kind_for_url(url))
+    return obj
+
 def set_sosac_watchTime(type_id, stream_id, time_val) :
+    if is_local_profile() :
+        local_watch_set(type_id, stream_id, w=time_val)
+        debug("profile %s: local watch %s %s %s"%(active_profile()["id"], type_id, stream_id, time_val), 1)
+        return
     sosac_passwordhash = passhash()
     time_val = int(time_val)
     data = {"time":int(time_val)}

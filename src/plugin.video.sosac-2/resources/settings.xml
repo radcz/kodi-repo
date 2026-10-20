@@ -263,6 +263,11 @@
 						<heading>30224</heading>
 					</control>
 				</setting>
+				<setting id="profile-ask" type="boolean" label="30471" help="30472">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
 				<setting id="auto-skin" type="boolean" label="30439" help="30440">
 					<level>0</level>
 					<default>false</default>

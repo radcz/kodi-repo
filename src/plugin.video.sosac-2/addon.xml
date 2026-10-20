@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.7" provider-name="zak">
+<addon id="plugin.video.sosac-2" name="Sosac.TV" version="3.1.2.8" provider-name="zak">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
 		<import addon="script.module.six" version="1.11.0"/>
@@ -25,6 +25,10 @@
 			<fanart>fanart.png</fanart>
         </assets>
         <news>
+3.1.2.8
+- Místní profily: jeden účet Sosac, ale každý profil má vlastní zhlédnuté a pozice
+- Hlavní profil je sdílený se sosac.tv, další profily si pamatují jen v daném Kodi
+- Každé zařízení si pamatuje svůj profil, profily jde přidat, přejmenovat i smazat
 3.1.2.7
 - Stahování jde pozastavit, pokračovat (i po restartu Kodi) a zrušit
 - Rozstahované video se ukládá jako .part a navazuje se tam, kde skončilo

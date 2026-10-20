@@ -1568,3 +1568,59 @@ msgstr "Pozastaviť všetky sťahovania"
 msgctxt "#30460"
 msgid "Resume all downloads"
 msgstr "Pokračovať vo všetkých sťahovaniach"
+
+msgctxt "#30461"
+msgid "Main (shared with sosac.tv)"
+msgstr "Hlavný (zdieľaný so sosac.tv)"
+
+msgctxt "#30462"
+msgid "Profile 2"
+msgstr "Profil 2"
+
+msgctxt "#30463"
+msgid "Choose profile"
+msgstr "Vyberte profil"
+
+msgctxt "#30464"
+msgid "+ New profile…"
+msgstr "+ Nový profil…"
+
+msgctxt "#30465"
+msgid "Rename profile…"
+msgstr "Premenovať profil…"
+
+msgctxt "#30466"
+msgid "Delete profile…"
+msgstr "Zmazať profil…"
+
+msgctxt "#30467"
+msgid "Profile name"
+msgstr "Názov profilu"
+
+msgctxt "#30468"
+msgid "Profile: %s"
+msgstr "Profil: %s"
+
+msgctxt "#30469"
+msgid "The main profile cannot be deleted."
+msgstr "Hlavný profil sa nedá zmazať."
+
+msgctxt "#30470"
+msgid "Delete profile %s and its watch history?"
+msgstr "Zmazať profil %s a jeho históriu?"
+
+msgctxt "#30471"
+msgid "Ask for profile on start"
+msgstr "Pýtať sa na profil pri spustení"
+
+msgctxt "#30472"
+msgid "Every device remembers its own profile. Turn this on when several people use the same device."
+msgstr "Každé zariadenie si pamätá svoj profil. Zapnite, keď jedno zariadenie používa viac ľudí."
+
+msgctxt "#30473"
+msgid "Profile: %s"
+msgstr "Profil: %s"
+
+msgctxt "#30474"
+msgid "The main profile is shared with sosac.tv and other devices. Other profiles keep watched status and resume positions only in this Kodi."
+msgstr "Hlavný profil je zdieľaný so sosac.tv a ostatnými zariadeniami. Ostatné profily si pamätajú zhliadnuté len v tomto Kodi."

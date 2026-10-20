@@ -129,6 +129,11 @@ last_command2 = ""
 
 def get_url(url):
     r = requests.get(url, headers=hdrs).text
+    if is_local_profile() and str(url).startswith(SOSAC_API) and "watching-time" not in url :
+        try :
+            r = json.dumps(apply_local_watch(json.loads(r), url))
+        except ValueError :
+            pass
     return r
 
 ################################################################################
@@ -1689,6 +1694,113 @@ def show_plug_list(letype, epi_id, items, start=None, stat=None):
         endOfDirectory(plugin.handle)
         xbmc.executebuiltin("Container.SetViewMode(%s)" % "507")
 
+def choose_profile(refresh=True) :
+    data = load_profiles()
+    names = [("[B]%s[/B]" if p["id"] == data.get("active") else "%s") % p["name"] for p in data["profiles"]]
+    names += [translate(30464), translate(30465), translate(30466)]
+    sel = dialog.select(translate(30463), names)
+    if sel < 0 :
+        return
+    n = len(data["profiles"])
+    if sel < n :
+        data["active"] = data["profiles"][sel]["id"]
+        save_profiles(data)
+        notify(translate(30402), tr(30468, data["profiles"][sel]["name"]), time=3000)
+    elif sel == n :
+        name = dialog.input(translate(30467), "Profil %d" % (n + 1))
+        if not name :
+            return
+        used = {p["id"] for p in data["profiles"]}
+        pid = next("p%d" % i for i in range(2, 1000) if "p%d" % i not in used)
+        data["profiles"].append({"id": pid, "name": name})
+        data["active"] = pid
+        save_profiles(data)
+        notify(translate(30402), tr(30468, name), time=3000)
+    elif sel == n + 1 :
+        idx = dialog.select(translate(30465), [p["name"] for p in data["profiles"]])
+        if idx < 0 :
+            return
+        name = dialog.input(translate(30467), data["profiles"][idx]["name"])
+        if name :
+            data["profiles"][idx]["name"] = name
+            save_profiles(data)
+    else :
+        others = [p for p in data["profiles"] if p["id"] != MAIN_PROFILE]
+        if not others :
+            dialog.ok(translate(30402), translate(30469))
+            return
+        idx = dialog.select(translate(30466), [p["name"] for p in others])
+        if idx < 0 :
+            return
+        victim = others[idx]
+        if not dialog.yesno(translate(30402), tr(30470, victim["name"])) :
+            return
+        data["profiles"] = [p for p in data["profiles"] if p["id"] != victim["id"]]
+        if data.get("active") == victim["id"] :
+            data["active"] = MAIN_PROFILE
+        save_profiles(data)
+        try :
+            os.remove(os.path.join(profilepath, "watch_%s.json" % victim["id"]))
+        except OSError :
+            pass
+    if refresh :
+        xbmc.executebuiltin('Container.Refresh')
+
+@plugin.route('/profiles')
+def profiles():
+    choose_profile()
+
+@plugin.route('/localwatch')
+def localwatch():
+    # Rozkoukané / Historie zhlédnutých pro místní profil (údaje jen z tohoto Kodi)
+    kind = plugin.args.get("kind", ["movies"])[0]
+    state = plugin.args.get("state", ["unfinished"])[0]
+    store = local_watch_all()[kind]
+    rows = []
+    for item_id, e in store.items() :
+        meta = e.get("meta")
+        dl = float(e.get("dl") or (meta or {}).get("dl") or 0)
+        w = float(e.get("w") or 0)
+        if not meta or not meta.get("l") or w <= 0 :
+            continue
+        done = dl > 0 and w >= 0.9 * dl
+        if (state == "finished") != done :
+            continue
+        rows.append((e.get("t", 0), item_id, meta, w, dl))
+    rows.sort(reverse=True)
+    xbmcplugin.setContent(int(sys.argv[1]), 'movies' if kind == "movies" else 'episodes')
+    for i, (t, item_id, meta, w, dl) in enumerate(rows[:300]) :
+        n = meta.get("n", {}).get("cs", "")
+        title = n[0] if isinstance(n, list) else n
+        if kind == "episodes" and "ep" in meta :
+            ne = meta.get("ne", {}).get("cs", "")
+            ne = ne[0] if isinstance(ne, list) else ne
+            title = "%s %sx%s%s" % (title, str(meta.get("s", "")).zfill(2), str(meta.get("ep", "")).zfill(2), (" - " + ne) if ne and ne != title else "")
+        li = ListItem(str(title))
+        item = dict(meta); item["w"] = w
+        try :
+            set_common_properties(item, li, "epi_prop" if kind == "episodes" else "")
+        except Exception as ex :
+            debug("localwatch props error %s"%ex, 2)
+        set_steam_details(item, li)
+        li.setInfo('video', {'title': title, 'count': i, 'mediatype': 'movie' if kind == "movies" else 'episode'})
+        if dl :
+            iconw = "done" if w >= 0.8 * dl else "3quarters" if w > 0.5 * dl else "2quarters" if w > 0.25 * dl else "1quarter"
+            li.setProperty('watched', f"special://home/addons/plugin.video.sosac-2/resources/images/{iconw}.png")
+        menu = [(translate(30289), "RunPlugin(%s)" % plugin.url_for(localreset, kind=kind, id=item_id))]
+        li.addContextMenuItems(menu)
+        addDirectoryItem(plugin.handle, plugin.url_for(play, kind, item_id, meta["l"], []), li, False)
+    endOfDirectory(plugin.handle)
+    xbmc.executebuiltin("Container.SetViewMode(%s)" % "507")
+
+@plugin.route('/localreset')
+def localreset():
+    kind = plugin.args.get("kind", ["movies"])[0]
+    item_id = plugin.args.get("id", [""])[0]
+    if item_id :
+        local_watch_set(kind, item_id, w=0)
+    xbmc.executebuiltin('Container.Refresh')
+
 @plugin.route('/')
 def index():
     try :
@@ -1699,6 +1811,14 @@ def index():
     debug("index  data %s"%data, 2)
     news_data = data.get("news", "")
     items = []
+    home = xbmcgui.Window(10000)
+    if addon.getSetting("profile-ask") == "true" and not home.getProperty("sosac_profile_asked") :
+        home.setProperty("sosac_profile_asked", "1")
+        choose_profile(refresh=False)
+    listItem = ListItem("[COLOR deepskyblue]%s[/COLOR]" % tr(30473, active_profile()["name"]))
+    listItem.setProperty("infomenu", translate(30474))
+    listItem.setArt({'icon': 'DefaultUser.png'})
+    items.append((plugin.url_for(profiles), listItem, False))
     listItem = ListItem(translate(30000))
     listItem.setProperty("infomenu",news_data)
     if news_data == ""  : listItem.setProperty("infomenu",translate(30100))
@@ -1750,11 +1870,11 @@ def movies():
     listItem = ListItem(translate(30008))
     listItem.setProperty("infomenu",translate(30108))
     listItem.setArt({'icon': get_icon("unfinishedmovies.png")})
-    items.append((plugin.url_for(categories,query="unfinished",query1 = "22",query2 = "1"), listItem, True))
+    items.append((plugin.url_for(localwatch, kind="movies", state="unfinished") if is_local_profile() else plugin.url_for(categories,query="unfinished",query1 = "22",query2 = "1"), listItem, True))
     listItem = ListItem(translate(30009))
     listItem.setProperty("infomenu",translate(30109))
     listItem.setArt({'icon': get_icon("watchedmovies.png")})
-    items.append((plugin.url_for(categories,query="finished",query1 = "22",query2 = "1"), listItem, True))
+    items.append((plugin.url_for(localwatch, kind="movies", state="finished") if is_local_profile() else plugin.url_for(categories,query="finished",query1 = "22",query2 = "1"), listItem, True))
     listItem = ListItem(translate(30010))
     listItem.setProperty("infomenu",translate(30110))
     listItem.setArt({'icon': get_icon("newdubbedmovies.png")})
@@ -1845,11 +1965,11 @@ def tvshows():
     listItem = ListItem(translate(30023))
     listItem.setProperty("infomenu",translate(30123))
     listItem.setArt({'icon': get_icon("unfinishedtvshows.png")})
-    items.append((plugin.url_for(cat_ser,query="unfinished",query1 = "22",query2 = "22",query3 = "22",query4 = "1"), listItem, True))
+    items.append((plugin.url_for(localwatch, kind="episodes", state="unfinished") if is_local_profile() else plugin.url_for(cat_ser,query="unfinished",query1 = "22",query2 = "22",query3 = "22",query4 = "1"), listItem, True))
     listItem = ListItem(translate(30024))
     listItem.setProperty("infomenu",translate(30124))
     listItem.setArt({'icon': get_icon("watchedtvshows.png")})
-    items.append((plugin.url_for(cat_ser,query="finished", query1 = "22", query2 = "22",query3 = "22",query4 = "1"), listItem, True))
+    items.append((plugin.url_for(localwatch, kind="episodes", state="finished") if is_local_profile() else plugin.url_for(cat_ser,query="finished", query1 = "22", query2 = "22",query3 = "22",query4 = "1"), listItem, True))
     listItem = ListItem(translate(30025))
     listItem.setProperty("infomenu",translate(30125))
     listItem.setArt({'icon': get_icon("lastaddedtvshows.png")})
@@ -3582,6 +3702,8 @@ def play(typ_vid, stream_id, video_id, epi_list):
     data = json.loads(source)
     start_from = data["w"]
     tot_time = data["dl"]
+    if is_local_profile() :
+        local_watch_set(typ_vid, stream_id, meta=data)
     title1 = ""
     if typ_vid != "movies" :
         eps = str(data["ep"]) if len(str(data["ep"])) > 1 else "0" + str(data["ep"])
@@ -3602,6 +3724,8 @@ def play(typ_vid, stream_id, video_id, epi_list):
                 source = get_url(url)
                 data = json.loads(source)
                 estart_from = data["w"]
+                if is_local_profile() :
+                    local_watch_set("episodes", x, meta=data)
                 etot_time = data["dl"]
                 title1 = ""
                 if typ_vid != "movies" :
@@ -3729,6 +3853,8 @@ def streammanu(typ_vid,stream_id,video_id):
             data = json.loads(source)
             start_from = data["w"]
             tot_time = data["dl"]
+            if is_local_profile() :
+                local_watch_set(typ_vid, stream_id, meta=data)
             title1 = ""
             if typ_vid != "movies" :
                 eps = str(data["ep"]) if len(str(data["ep"])) > 1 else "0" + str(data["ep"])

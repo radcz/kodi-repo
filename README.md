@@ -5,7 +5,7 @@ Veřejný repozitář doplňků pro [Kodi](https://kodi.tv) 19, 20 a 21. Funguje
 | Doplněk | Verze | Popis |
 |---|---|---|
 | `repository.radek` | 1.0.3 | tento repozitář, přes který se doplňky instalují a aktualizují |
-| `plugin.video.sosac-2` | 3.1.2.7 | Sosac.TV s opravami, stahováním offline ve 4K; stahování jde pozastavit, pokračovat (i po restartu Kodi) a zrušit |
+| `plugin.video.sosac-2` | 3.1.2.8 | Sosac.TV s opravami, stahováním offline ve 4K; stahování jde pozastavit, pokračovat (i po restartu Kodi) a zrušit |
 | `plugin.video.prehrajto` | 2.0.5.3 | Prehraj.to česky: hledání s náhledy, stahování jen ve 4K/2K, celá stránka najednou; stahování jde pozastavit, pokračovat (i po restartu Kodi) a zrušit (vyžaduje Premium) |
 | `plugin.video.freevideo` | 1.8.0 | Video FREE: 14 webů, Oblíbené s hvězdičkami 1–3 úplně nahoře, lesbické výpisy vždy nahoře, stahování celé stránky, jen přesně 1080p; stahování jde pozastavit, pokračovat (i po restartu Kodi) a zrušit |
 | `repository.dobbelina` | 1.0.4.1 | repozitář Dobbelina (Cumination) s vlastní ikonou |
@@ -82,8 +82,9 @@ Kodi si nové verze stahuje z tohoto repozitáře samo. Ručně: **Doplňky → 
 
 ---
 
-## Sosac.TV 3.1.2.6: co je nového a opraveno oproti 3.1.2
+## Sosac.TV 3.1.2.8: co je nového a opraveno oproti 3.1.2
 
+- **Místní profily:** jeden účet Sosac, ale víc diváků. Hlavní profil je sdílený se sosac.tv, další profily (Profil 2, později třeba Profil 3) si zhlédnuté a pozice „pokračovat od“ pamatují jen v daném Kodi. Každé zařízení si pamatuje svůj profil. Přepíná se v hlavním menu Sosacu nahoře (*Profil: …*).
 - **Apple TV a iPad:** stahuje se rovnou offline do Kodi. Kompatibilita s Kodi 19 (Python 3.8).
 - **Kvalita stahování:** *Jen 4K* (výchozí; videa bez 4K se přeskočí), *4K, jinak nejlepší dostupná* nebo *Vybrat ručně*. Sosac nabízí 4K, 1080p, 720p a 480p, kvalita 1440p tam není.
 - **Průběh stahování:** lišta s procenty, MB a rychlostí v rohu Kodi. Ve *Stažených* je přehled probíhajících a čekajících stahování a volba *Zrušit stahování*.

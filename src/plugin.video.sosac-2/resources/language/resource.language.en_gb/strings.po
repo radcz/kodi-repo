@@ -1568,3 +1568,59 @@ msgstr ""
 msgctxt "#30460"
 msgid "Resume all downloads"
 msgstr ""
+
+msgctxt "#30461"
+msgid "Main (shared with sosac.tv)"
+msgstr ""
+
+msgctxt "#30462"
+msgid "Profile 2"
+msgstr ""
+
+msgctxt "#30463"
+msgid "Choose profile"
+msgstr ""
+
+msgctxt "#30464"
+msgid "+ New profile…"
+msgstr ""
+
+msgctxt "#30465"
+msgid "Rename profile…"
+msgstr ""
+
+msgctxt "#30466"
+msgid "Delete profile…"
+msgstr ""
+
+msgctxt "#30467"
+msgid "Profile name"
+msgstr ""
+
+msgctxt "#30468"
+msgid "Profile: %s"
+msgstr ""
+
+msgctxt "#30469"
+msgid "The main profile cannot be deleted."
+msgstr ""
+
+msgctxt "#30470"
+msgid "Delete profile %s and its watch history?"
+msgstr ""
+
+msgctxt "#30471"
+msgid "Ask for profile on start"
+msgstr ""
+
+msgctxt "#30472"
+msgid "Every device remembers its own profile. Turn this on when several people use the same device."
+msgstr ""
+
+msgctxt "#30473"
+msgid "Profile: %s"
+msgstr ""
+
+msgctxt "#30474"
+msgid "The main profile is shared with sosac.tv and other devices. Other profiles keep watched status and resume positions only in this Kodi."
+msgstr ""
